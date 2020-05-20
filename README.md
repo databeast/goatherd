@@ -1,4 +1,4 @@
-# goatherd
+# GOatherd
 Packet Capture and Analysis tool for identifying downstream subnets
 
 ## what does it do?
