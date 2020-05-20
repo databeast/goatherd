@@ -1,5 +1,5 @@
 # goatherd
-Packet Capture and Analysis tool for identifying downstream subnets
+Packet Capture and Analysis tool for passively discovering routable address space by observing bitmask changes on captured packets
 
 ## what does it do?
 
