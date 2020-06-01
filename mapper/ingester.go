@@ -1,20 +1,19 @@
-
+package mapper
 
 type PacketIngester struct {
-
 	incoming chan *PacketSummary
 }
 
 type PacketSummary struct {
-	SrcIP  string 
+	SrcIP  string
 	SrcMac  string
-	DstIP string 
-	DstMac string 
-	TTL		int8 
+	DstIP string
+	DstMac string
+	TTL        int8
 }
 
 // Channel for Ingesting processed packets into the Mapper
-func (i PacketIngester) Ingest()  (<-chan(*PacketSummary), err error) {
+func (i PacketIngester) Ingest()  ( ingestchannel <-chan(*PacketSummary)) {
 
-	
+	return nil
 }

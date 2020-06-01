@@ -17,7 +17,7 @@ package cmd
 
 import (
 	"fmt"
-
+	"github.com/databeast/goatherd/mapper"
 	"github.com/databeast/goatherd/collectors"
 	"github.com/spf13/cobra"
 )
@@ -44,7 +44,8 @@ to quickly create a Cobra application.`,
 			println(err.Error())
 			return
 		}
-
+		mapper := mapper.NewMapper()
+		mapper.Begin()
 	},
 }
 
