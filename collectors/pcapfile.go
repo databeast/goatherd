@@ -8,17 +8,36 @@ import (
 )
 
 type PcapFileCollector struct {
+	pcapdata *pcap.Handle
+}
+
+func NewPcapFileCollector() (collector *PcapFileCollector, err error) {
+	return &PcapFileCollector{}, nil
 }
 
 // Load PCap data from file and start piping it into the collector channel
-func (c *PcapFileCollector) Load(filename string) {
-	pcapfile := os.Open("/path/to/pcapfile")
-	handle, err := pcap.OpenOfflineFile(pcapfile)
+func (c *PcapFileCollector) Load(filename string) (err error) {
+	pcapfile, err := os.Open("/path/to/pcapfile")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	c.pcapdata, err = pcap.OpenOfflineFile(pcapfile)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	// start reading packets one by one
-	nextpacket, err := handle.ReadPacketData()
+	// everything succesful, start sending packets to the mapper
+	go c.ingestFile()
+	return nil
+}
 
+func (c *PcapFileCollector) ingestFile() {
+	// start reading packets one by one
+	for {
+		_, _, err := c.pcapdata.ReadPacketData()
+		if err != nil {
+			return
+		}
+
+	}
 }
