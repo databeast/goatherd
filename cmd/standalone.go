@@ -17,8 +17,8 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/databeast/goatherd/mapper"
 	"github.com/databeast/goatherd/collectors"
+	"github.com/databeast/goatherd/mapper"
 	"github.com/spf13/cobra"
 )
 
