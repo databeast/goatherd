@@ -1,6 +1,7 @@
 package main
 
+import "github.com/databeast/goatherd/cmd"
+
 func main() {
-	println("test run")
-	// body
+	cmd.Execute()
 }
