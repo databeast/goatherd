@@ -9,21 +9,26 @@ type AddressPairing struct {
 	Ttl int8
 }
 
+type Collector interface {
+	Start()
+}
 // Base Packet Collector
-type Collector struct {
+type collectorBase struct {
 	MapperHost  string // Mapper this collector is sending to
 	PacketCount int    //running count of observed packets
 	pipeline    chan *AddressPairing
 }
 
-func (c *Collector) Start() {
+
+
+func (c *collectorBase) Start() {
 
 }
 
-func (c *Collector) Stop() {
+func (c *collectorBase) Stop() {
 
 }
 
-func (c *Collector) Ingest(packet []byte) {
+func (c *collectorBase) Ingest(packet []byte) {
 
 }

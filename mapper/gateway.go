@@ -5,8 +5,9 @@ import "net"
 
 // Tracking of Identified gateways on the local subnet
 type Gateway struct {
+	ipaddr 		net.IPAddr
 	arpaddr     net.HardwareAddr
 	isUpstream  bool
-	ttltracking *TTLtracker
+	ttltracking *ttltracker
 	packetcount int64
 }

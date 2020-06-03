@@ -8,6 +8,7 @@ import (
 )
 
 type PcapFileCollector struct {
+	collectorBase
 	pcapdata *pcap.Handle
 }
 
