@@ -7,7 +7,7 @@ import (
 
 type Collector interface {
 	Start()
-	Packets() chan packets.PacketSummary
+	Packets() <-chan packets.PacketSummary
 }
 // Base Packet Collector
 type collectorBase struct {

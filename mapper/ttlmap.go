@@ -9,7 +9,7 @@ import (
 )
 
 // TTLs vary by OS, but are almost always derived from a bit boundary integer
-type ttlcount map[int8]int64
+type ttlcount map[uint8]int64
 
 // List of observed TTL coming upstream through this subnet
 type ttltracker struct {

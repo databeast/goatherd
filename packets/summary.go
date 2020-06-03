@@ -1,10 +1,12 @@
 package packets
 
+import "net"
+
 type PacketSummary struct {
-	SrcIP  string
-	SrcMac string
-	DstIP  string
-	DstMac string
-	TTL    int8
+	SrcIP  net.IP
+	SrcMac net.HardwareAddr
+	DstIP  net.IP
+	DstMac net.HardwareAddr
+	TTL    uint8
 }
 

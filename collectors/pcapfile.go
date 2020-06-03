@@ -2,8 +2,9 @@ package collectors
 
 import (
 	"github.com/databeast/goatherd/packets"
+	"github.com/google/gopacket"
 	"os"
-
+	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	"github.com/pkg/errors"
 )
@@ -11,10 +12,18 @@ import (
 type PcapFileCollector struct {
 	collectorBase
 	pcapdata *pcap.Handle
+	packets chan packets.PacketSummary
 }
 
 func NewPcapFileCollector() (collector *PcapFileCollector, err error) {
-	return &PcapFileCollector{}, nil
+	return &PcapFileCollector{
+		collectorBase: collectorBase{
+			MapperHost:  "",
+			PacketCount: 0,
+			pipeline:    make(chan packets.PacketSummary),
+		},
+		pcapdata:      nil,
+	}, nil
 }
 
 // Load PCap data from file and start piping it into the collector channel
@@ -34,16 +43,43 @@ func (c *PcapFileCollector) Load(filename string) (err error) {
 }
 
 func (c *PcapFileCollector) ingestFile() {
+	packetSource := gopacket.NewPacketSource(c.pcapdata, c.pcapdata.LinkType())
+	var packet gopacket.Packet
+	var summary packets.PacketSummary
 	// start reading packets one by one
 	for {
-		_, _, err := c.pcapdata.ReadPacketData()
-		if err != nil {
-			return
+		packet = <- packetSource.Packets()
+
+		ethernetLayer := packet.Layer(layers.LayerTypeEthernet)
+		if ethernetLayer == nil {
+			continue // can't work with this
+		}
+		ethernetPacket, _ := ethernetLayer.(*layers.Ethernet)
+		summary.SrcMac =  ethernetPacket.SrcMAC
+		summary.DstMac = ethernetPacket.DstMAC
+
+
+		// Let's see if the packet is IP (even though the ether type told us)
+		ipLayer := packet.Layer(layers.LayerTypeIPv4)
+		if ipLayer == nil {
+			continue //cant work with this
+		}
+		ip, _ := ipLayer.(*layers.IPv4)
+		summary.SrcIP  =  ip.SrcIP
+		summary.DstIP = ip.DstIP
+
+		summary.TTL = ip.TTL
+
+
+		c.packets <- summary
+
 		}
 
-	}
+
 }
 
-func (c *PcapFileCollector) Packets() (chan packets.PacketSummary) {
-	return make(chan packets.PacketSummary)
+
+// Interface Declaration to
+func (c *PcapFileCollector) Packets() (<-chan packets.PacketSummary) {
+	return c.pipeline
 }
