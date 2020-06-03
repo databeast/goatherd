@@ -3,7 +3,10 @@
 // the given downstream subnet is from the capturepoint network
 package mapper
 
-import "sync"
+import (
+	"github.com/databeast/goatherd/packets"
+	"sync"
+)
 
 // TTLs vary by OS, but are almost always derived from a bit boundary integer
 type ttlcount map[int8]int64
@@ -14,7 +17,7 @@ type ttltracker struct {
 	mu *sync.Mutex
 }
 // track the ttl on a given packet
-func (t *ttltracker) track(pkt *PacketSummary) {
+func (t *ttltracker) track(pkt packets.PacketSummary) {
 	t.mu.Lock()
 	t.count[pkt.TTL] += 1
 	t.mu.Unlock()

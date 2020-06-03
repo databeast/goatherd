@@ -1,6 +1,7 @@
 package collectors
 
 import (
+	"github.com/databeast/goatherd/packets"
 	"os"
 
 	"github.com/google/gopacket/pcap"
@@ -41,4 +42,8 @@ func (c *PcapFileCollector) ingestFile() {
 		}
 
 	}
+}
+
+func (c *PcapFileCollector) Packets() (chan packets.PacketSummary) {
+	return make(chan packets.PacketSummary)
 }

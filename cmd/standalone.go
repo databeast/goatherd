@@ -45,7 +45,7 @@ to quickly create a Cobra application.`,
 			return
 		}
 		mapper := mapper.NewMapper()
-		mapper.Collect(collector)
+		err = mapper.Collect(collector)
 		mapper.Begin()
 	},
 }
