@@ -26,6 +26,3 @@ func (c *collectorBase) Stop() {
 
 }
 
-func (c *collectorBase) Ingest(packet []byte) {
-
-}

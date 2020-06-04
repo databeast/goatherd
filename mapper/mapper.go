@@ -4,14 +4,11 @@ import "github.com/databeast/goatherd/collectors"
 
 type Mapper struct {
 	collector collectors.Collector
-	ingester *PacketIngester
 	capturenets []CapturePoint
 	events chan MappingEvent
 }
 
 func (m *Mapper) Begin() {
-
-	m.collector.Packets()
 
 }
 
@@ -35,7 +32,7 @@ func (m *Mapper) Collect(collector collectors.Collector) error {
 }
 
 func NewMapper() *Mapper {
-	newmapper := &Mapper{ingester: &PacketIngester{}}
+	newmapper := &Mapper{}
 	return newmapper
 }
 
