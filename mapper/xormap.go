@@ -21,4 +21,4 @@ type XorMap struct {
 //
 // This assists us in identifying potential subnet masks, especially on non-octet boundaries
 
-
+//
