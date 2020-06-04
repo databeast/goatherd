@@ -1,6 +1,7 @@
 package capture
 
 import (
+	"encoding/binary"
 	"github.com/databeast/goatherd/mapper/subnets"
 	"github.com/databeast/goatherd/packets"
 	"net"
@@ -21,18 +22,22 @@ type CapturePoint struct {
 	LocalNet           net.IPNet		    // local subnet
 	Nic  			   string   			// displayname of the NIC this capturepoint is bound to
 	macmappings        map[macaddrstr]net.IP // mapping ARP to IP addresses on local network
+	mapping   		   XorMap 				// bitmask tracking for this capture point
 }
 
 
 
 // the Base bitmask for this capture points local network
 // all downstream networks must, by definition, XOR mask to 0 with these bits
-func (c *CapturePoint) BaseBitMask() uint32 {
+func (c *CapturePoint) BaseBitMask() (bitmask uint32) {
+	// 11000000.10101000.00000000 .00000001
+	// 11111111.11111111.11111111
 
-	return 0
+	bitmask = c.LocalNet.Mask
+	return binary.BigEndian.Uint32(c.LocalNet.IP) // IP traffic is always calculated bigendian
 }
 
-func (c *CapturePoint) TestIfGateway(summary packets.PacketSummary) bool {
+func (c *CapturePoint) testIfGateway(summary packets.PacketSummary) bool {
 	// is this is an already known gateway MAC ?
 	if _, ok := c.SupernetGateways[summary.DstMac.String()] ; ok {
 		return true
@@ -69,3 +74,5 @@ func (c CapturePoint) CalculateSubnets() (subs []subnets.Subnet, err error) {
 
 	return nil ,nil
 }
+
+
