@@ -3,9 +3,13 @@
 
 package mapper
 
+
+
 // Exclusive-OR bitmasking for subnet identification
 type XorMap struct {
-
+	bitmap   uint32    //
+	fixedbits uint32   //bitflags for bits
+	variantbits uint32
 }
 
 // start with a given subnet and prefix

@@ -5,13 +5,26 @@ import (
 	"net"
 )
 
+type macaddrstr string
+
+// sanity check for valid hex string representation of MAC addrs
+func (m macaddrstr) validate() bool {
+
+}
+
 // An individual Capture Point
 // Usually there will be only one of these, but distributed capture mode requires one for each capture node
 type CapturePoint struct {
-	UpstreamGateways   map[string]Gateway
-	DownstreamGateways map[string]Gateway
-	LocalNet           net.IPNet
-	macmappings        map[string]net.IP // mapping ARP to IP addresses on local network
+	SupernetGateways   map[macaddrstr]Gateway // gateways that lead to supernets
+	SubnetGateways 	   map[macaddrstr]Gateway // gateways that lead to subnets
+	LocalNet           net.IPNet		    // local subnet
+	Nic  			   string   			// displayname of the NIC this capturepoint is bound to
+	macmappings        map[macaddrstr]net.IP // mapping ARP to IP addresses on local network
+}
+
+// Add a known capturepoint to this collector - usually the subnet of the monitored NIC
+func (c *CapturePoint) AddCapturePoint() error {
+
 }
 
 // the Base bitmask for this capture points local network
@@ -23,10 +36,10 @@ func (c *CapturePoint) BaseBitMask() uint32 {
 
 func (c *CapturePoint) TestIfGateway(summary packets.PacketSummary) bool {
 	// is this is an already known gateway MAC ?
-	if _, ok := c.UpstreamGateways[summary.DstMac.String()] ; ok {
+	if _, ok := c.SupernetGateways[summary.DstMac.String()] ; ok {
 		return true
 	}
-	if _, ok := c.UpstreamGateways[summary.SrcMac.String()] ; ok {
+	if _, ok := c.SupernetGateways[summary.SrcMac.String()] ; ok {
 		return true
 	}
 
@@ -41,7 +54,7 @@ func (c *CapturePoint) TestIfGateway(summary packets.PacketSummary) bool {
 
 	}
 
-	// now check that its a downstream gateway.
+	// now check that its a downstream gateway to a subnet.
 
 
 	// lastly, attempt to guess if this might be a NAT gateway, by looking for decremented TTL on a local address

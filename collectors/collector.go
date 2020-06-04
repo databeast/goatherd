@@ -6,7 +6,8 @@ import (
 
 
 type Collector interface {
-	Start()
+	Start() error
+	Stop() error
 	Packets() <-chan packets.PacketSummary
 }
 // Base Packet Collector

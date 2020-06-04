@@ -3,11 +3,16 @@ package collectors
 import (
 	"github.com/databeast/goatherd/packets"
 	"github.com/google/gopacket"
-	"os"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	"github.com/pkg/errors"
+	"os"
 )
+
+// NOTE: PcapFiles have no requirements to contain packets only from a single NIC
+// For this reason, no local subnet can be assumed, as multiple pcapfiles can easily be merged into one
+// for this reason, PCapFile CapturePoints cannot be assumed to have a single local subnet
+
 
 type PcapFileCollector struct {
 	collectorBase
@@ -28,7 +33,7 @@ func NewPcapFileCollector() (collector *PcapFileCollector, err error) {
 
 // Load PCap data from file and start piping it into the collector channel
 func (c *PcapFileCollector) Load(filename string) (err error) {
-	pcapfile, err := os.Open("/path/to/pcapfile")
+	pcapfile, err := os.Open(filename)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -37,9 +42,13 @@ func (c *PcapFileCollector) Load(filename string) (err error) {
 		return errors.WithStack(err)
 	}
 
-	// everything succesful, start sending packets to the mapper
+	// everything is successful, start making packets available to the mapper
 	go c.ingestFile()
-	return nil
+	return err
+}
+
+func (c *PcapFileCollector) Start() {
+	c.ingestFile()
 }
 
 func (c *PcapFileCollector) ingestFile() {
@@ -80,6 +89,6 @@ func (c *PcapFileCollector) ingestFile() {
 
 
 // Interface Declaration to
-func (c *PcapFileCollector) Packets() (<-chan packets.PacketSummary) {
+func (c *PcapFileCollector) Packets() <-chan packets.PacketSummary {
 	return c.pipeline
 }

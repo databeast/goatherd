@@ -1,11 +1,14 @@
 package mapper
 
-import "github.com/databeast/goatherd/collectors"
+import (
+	"github.com/databeast/goatherd/collectors"
+)
 
+// The Mapper is the core processor for calculating possible subnet masks from collected traffic
 type Mapper struct {
-	collector collectors.Collector
-	capturenets []CapturePoint
-	events chan MappingEvent
+	collectors []collectors.Collector // packet capture collector instances
+	capturepoints []CapturePoint // packet capture source tracking for collectors
+	events chan MappingEvent  // meta-events from a given mapper
 }
 
 func (m *Mapper) Begin() {
@@ -13,27 +16,31 @@ func (m *Mapper) Begin() {
 }
 
 //subscribe to event messages from the mapper
-func (m *Mapper) Events() (chan MappingEvent){
-
-	return nil
+func (m *Mapper) Events() (events chan MappingEvent) {
+	return m.events
 }
 
-func (m *Mapper) Collect(collector collectors.Collector) error {
-	m.collector = collector
+// Engage mapper with a
+func (m *Mapper) AddCollecter(collector collectors.Collector) error {
+	m.collectors = append(m.collectors, collector)
 	collector.Start()
 
-	for {
-		p := <- collector.Packets()
-		m.ingester.Ingest() <- p
-
+	go func() { // commence collector eventloop
+		for {
+			p := <-collector.Packets()
+			m.ingester.Ingest() <- p
+			// TODO: introduce select for sigv quit shutdown
+		}
 	}
-
 	return nil
 }
 
 func NewMapper() *Mapper {
-	newmapper := &Mapper{}
-	return newmapper
+	return &Mapper{
+		collectors:    nil,
+		capturepoints: nil,
+		events:        nil,
+	}
 }
 
 // information events from the mapping process
@@ -41,3 +48,7 @@ type MappingEvent struct {
 	message  string
 }
 
+// Primary Process loop for the mapper
+func (m *Mapper) processPacketSummary() {
+
+}
