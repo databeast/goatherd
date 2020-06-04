@@ -1,6 +1,7 @@
-package mapper
+package capture
 
 import (
+	"github.com/databeast/goatherd/mapper/subnets"
 	"github.com/databeast/goatherd/packets"
 	"net"
 )
@@ -22,10 +23,7 @@ type CapturePoint struct {
 	macmappings        map[macaddrstr]net.IP // mapping ARP to IP addresses on local network
 }
 
-// Add a known capturepoint to this collector - usually the subnet of the monitored NIC
-func (c *CapturePoint) AddCapturePoint() error {
 
-}
 
 // the Base bitmask for this capture points local network
 // all downstream networks must, by definition, XOR mask to 0 with these bits
@@ -64,4 +62,10 @@ func (c *CapturePoint) TestIfGateway(summary packets.PacketSummary) bool {
 	net.HardwareAddr.String()
 
 	return false
+}
+
+// Generate a Tree of currently-viable subnet calculation from this capturepoint
+func (c CapturePoint) CalculateSubnets() (subs []subnets.Subnet, err error) {
+
+	return nil ,nil
 }

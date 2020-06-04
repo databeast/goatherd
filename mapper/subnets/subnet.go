@@ -25,3 +25,8 @@ func IsViableSubnet(networkaddr net.IP, broadcastaddr net.IP) (*net.IPNet, bool)
 
 	return nil, false
 }
+
+func NewSubnet(ipNet *net.IPNet) (subnet *Subnet, err error) {
+	return nil, nil
+}
+

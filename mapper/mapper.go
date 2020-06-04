@@ -21,7 +21,7 @@ func (m *Mapper) Events() (events chan MappingEvent) {
 }
 
 // Engage mapper with a
-func (m *Mapper) AddCollecter(collector collectors.Collector) error {
+func (m *Mapper) AddCollector(collector collectors.Collector) error {
 	m.collectors = append(m.collectors, collector)
 	collector.Start()
 
@@ -31,7 +31,7 @@ func (m *Mapper) AddCollecter(collector collectors.Collector) error {
 			m.ingester.Ingest() <- p
 			// TODO: introduce select for sigv quit shutdown
 		}
-	}
+	}()
 	return nil
 }
 
@@ -45,10 +45,16 @@ func NewMapper() *Mapper {
 
 // information events from the mapping process
 type MappingEvent struct {
+	fromcollector collectors.Collector
 	message  string
 }
 
 // Primary Process loop for the mapper
 func (m *Mapper) processPacketSummary() {
+
+}
+
+// Add a known capturepoint to this collector - usually the subnet of the monitored NIC
+func (m *Mapper) AddCapturePoint() error {
 
 }

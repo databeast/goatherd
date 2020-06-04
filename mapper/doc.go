@@ -1,5 +1,12 @@
 package mapper
 
+// Create a Mapper
+// Load a Collector
+// Define a capturepoint for the collector
+//
+
+
+
 // Goatherd Mapping operates by mimicking the same boolean AND/XOR operations that IP routing uses
 //
 //

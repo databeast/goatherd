@@ -1,5 +1,5 @@
 // Identified Gateways on Observed sections
-package mapper
+package capture
 
 import "net"
 

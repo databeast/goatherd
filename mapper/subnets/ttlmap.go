@@ -1,7 +1,7 @@
 // TTL Tracker monitors the differentials in TTL of packets matched to a given subnet
 // by finding a common integer variance in them, it attempts to guess how many 'hops'
 // the given downstream subnet is from the capturepoint network
-package mapper
+package subnets
 
 import (
 	"github.com/databeast/goatherd/packets"
