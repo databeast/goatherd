@@ -3,8 +3,8 @@ package subnets
 import "net"
 
 type Subnet struct {
-	Base          uint32       // Integer of the base IP Address of this Subnet
-	Mask          uint32       // base Integer for XOR masking matching packets to this subnet (ie the subnet Mask)
+	Base uint32 // Integer of the base IP Address of this Subnet
+	Mask uint32 // base Integer for XOR masking matching packets to this subnet (ie the subnet Mask)
 
 	ObservedCount int       // how many incoming packets have matched this Potential Subnet?
 	Subnets       []*Subnet // Potential Subnets of this Subnet
@@ -29,4 +29,3 @@ func IsViableSubnet(networkaddr net.IP, broadcastaddr net.IP) (*net.IPNet, bool)
 func NewSubnet(ipNet *net.IPNet) (subnet *Subnet, err error) {
 	return nil, nil
 }
-

@@ -7,6 +7,4 @@ package capture
 // each downstream gateway will attempt to discover a viable list of routable CIDR subnets
 // that are available beyond the given gateway.
 
-
 // Determine upstream via broadest range of variant bits.
-

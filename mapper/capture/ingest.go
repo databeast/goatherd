@@ -13,7 +13,4 @@ func (c *CapturePoint) process(summary packets.PacketSummary) {
 
 	// flag the variant bits beyond the mask bits.
 
-
-
-
 }

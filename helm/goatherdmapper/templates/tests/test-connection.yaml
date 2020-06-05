@@ -3,7 +3,7 @@ kind: Pod
 metadata:
   name: "{{ include "goatherdmapper.fullname" . }}-test-connection"
   labels:
-    {{- include "goatherdmapper.labels" . | nindent 4 }}
+  {{- include "goatherdmapper.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": test-success
 spec:

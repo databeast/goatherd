@@ -46,13 +46,11 @@ type ttltrack map[uint8]int64
 // if a given bitposition remains Nil, it is assumed to be invariant
 type BitMap map[bitposition]ttltrack
 
-
 func (c *CapturePoint) trackBitTTL(position bitposition, ttlstep uint8) {
 	c.bitmu.Lock()
-	c.mapping[position][ttl] += 1
+	c.mapping[position][ttlstep] += 1
 	c.bitmu.Unlock()
 }
-
 
 // start with a given subnet and prefix
 // 1101 0101 1101 0110 1000 0111 / 24

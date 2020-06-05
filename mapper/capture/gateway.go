@@ -1,25 +1,31 @@
 // Identified Gateways on Observed sections
 package capture
 
-import "net"
+import (
+	"net"
+	"sync"
+)
 
 // Tracking of Identified gateways on the local subnet
 type Gateway struct {
-	ipaddr 		net.IP
+	ipaddr      net.IP
 	arpaddr     net.HardwareAddr
-	isUpstream  bool
-	tracking    BitMap
-	packetcount int64
-	isnat	    bool
-}
 
+	isUpstream  bool
+	isnat       bool
+
+	packetcount int64
+
+	bitmapping BitMap // TTL-Per-Bit tracking for this capture point
+	bitmu      *sync.Mutex
+}
 
 func NewGateway(addr net.IP, arpaddr net.HardwareAddr) *Gateway {
 	return &Gateway{
 		ipaddr:      addr,
 		arpaddr:     arpaddr,
 		isUpstream:  false,
-		tracking:    BitMap{},
+		bitmapping:  BitMap{},
 		packetcount: 0,
 		isnat:       false,
 	}
@@ -29,6 +35,3 @@ func NewGateway(addr net.IP, arpaddr net.HardwareAddr) *Gateway {
 func (g *Gateway) BaseBitMask() uint32 {
 	return 0
 }
-
-
-

@@ -1,4 +1,3 @@
-
 package cmd
 
 import (
@@ -12,7 +11,7 @@ import (
 var standaloneCmd = &cobra.Command{
 	Use:   "standalone",
 	Short: "run goatherd in local capture standalone mode",
-	Long: `goatherd will run the collector and mapper components simultaneously, from a local interface or .pcap file`,
+	Long:  `goatherd will run the collector and mapper components simultaneously, from a local interface or .pcap file`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("standalone called")
 		collector, err := collectors.NewPcapFileCollector()

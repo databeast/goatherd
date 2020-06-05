@@ -13,11 +13,10 @@ import (
 // For this reason, no local subnet can be assumed, as multiple pcapfiles can easily be merged into one
 // for this reason, PCapFile CapturePoints cannot be assumed to have a single local subnet
 
-
 type PcapFileCollector struct {
 	collectorBase
 	pcapdata *pcap.Handle
-	packets chan packets.PacketSummary
+	packets  chan packets.PacketSummary
 }
 
 func NewPcapFileCollector() (collector *PcapFileCollector, err error) {
@@ -27,7 +26,7 @@ func NewPcapFileCollector() (collector *PcapFileCollector, err error) {
 			PacketCount: 0,
 			pipeline:    make(chan packets.PacketSummary),
 		},
-		pcapdata:      nil,
+		pcapdata: nil,
 	}, nil
 }
 
@@ -57,16 +56,15 @@ func (c *PcapFileCollector) ingestFile() {
 	var summary packets.PacketSummary
 	// start reading packets one by one
 	for {
-		packet = <- packetSource.Packets()
+		packet = <-packetSource.Packets()
 
 		ethernetLayer := packet.Layer(layers.LayerTypeEthernet)
 		if ethernetLayer == nil {
 			continue // can't work with this
 		}
 		ethernetPacket, _ := ethernetLayer.(*layers.Ethernet)
-		summary.SrcMac =  ethernetPacket.SrcMAC
+		summary.SrcMac = ethernetPacket.SrcMAC
 		summary.DstMac = ethernetPacket.DstMAC
-
 
 		// Let's see if the packet is IP (even though the ether type told us)
 		ipLayer := packet.Layer(layers.LayerTypeIPv4)
@@ -74,19 +72,16 @@ func (c *PcapFileCollector) ingestFile() {
 			continue //cant work with this
 		}
 		ip, _ := ipLayer.(*layers.IPv4)
-		summary.SrcIP  =  ip.SrcIP
+		summary.SrcIP = ip.SrcIP
 		summary.DstIP = ip.DstIP
 
 		summary.TTL = ip.TTL
 
-
 		c.packets <- summary
 
-		}
-
+	}
 
 }
-
 
 // Interface Declaration to
 func (c *PcapFileCollector) Packets() <-chan packets.PacketSummary {

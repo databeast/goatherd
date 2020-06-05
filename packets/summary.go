@@ -9,4 +9,3 @@ type PacketSummary struct {
 	DstMac net.HardwareAddr
 	TTL    uint8
 }
-

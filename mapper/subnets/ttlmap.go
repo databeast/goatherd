@@ -14,14 +14,16 @@ type ttlcount map[uint8]int64
 // List of observed TTL coming upstream through this subnet
 type ttltracker struct {
 	count ttlcount
-	mu *sync.Mutex
+	mu    *sync.Mutex
 }
+
 // track the ttl on a given packet
 func (t *ttltracker) track(pkt packets.PacketSummary) {
 	t.mu.Lock()
 	t.count[pkt.TTL] += 1
 	t.mu.Unlock()
 }
+
 // what is the largest number of probable hops it takes to reach this network from downstream subnets?
 func (t *ttltracker) MaxHeight() {
 
@@ -31,4 +33,3 @@ func (t *ttltracker) MaxHeight() {
 func (t *ttltracker) Depth() {
 
 }
-
