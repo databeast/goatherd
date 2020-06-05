@@ -5,6 +5,7 @@ import (
 	"github.com/databeast/goatherd/mapper/subnets"
 	"github.com/databeast/goatherd/packets"
 	"net"
+	"sync"
 )
 
 type macaddrstr string
@@ -22,7 +23,8 @@ type CapturePoint struct {
 	LocalNet           net.IPNet		    // local subnet
 	Nic  			   string   			// displayname of the NIC this capturepoint is bound to
 	macmappings        map[macaddrstr]net.IP // mapping ARP to IP addresses on local network
-	mapping   		   XorMap 				// bitmask tracking for this capture point
+	mapping   		   BitMap				// bitmask tracking for this capture point
+	bitmu			   *sync.Mutex
 }
 
 

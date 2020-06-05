@@ -44,7 +44,14 @@ type ttltrack map[uint8]int64
 
 // TTL Tracking for each variable bit position
 // if a given bitposition remains Nil, it is assumed to be invariant
-type BitMap map[bitposition]*ttltrack
+type BitMap map[bitposition]ttltrack
+
+
+func (c *CapturePoint) trackBitTTL(position bitposition, ttlstep uint8) {
+	c.bitmu.Lock()
+	c.mapping[position][ttl] += 1
+	c.bitmu.Unlock()
+}
 
 
 // start with a given subnet and prefix
