@@ -8,13 +8,27 @@ type Gateway struct {
 	ipaddr 		net.IP
 	arpaddr     net.HardwareAddr
 	isUpstream  bool
-	ttltracking *ttltracker
+	tracking    BitMap
 	packetcount int64
 	isnat	    bool
+}
+
+
+func NewGateway(addr net.IP, arpaddr net.HardwareAddr) *Gateway {
+	return &Gateway{
+		ipaddr:      addr,
+		arpaddr:     arpaddr,
+		isUpstream:  false,
+		tracking:    BitMap{},
+		packetcount: 0,
+		isnat:       false,
+	}
 }
 
 // the XORable bitmask that encompasses all traffic coming from this network
 func (g *Gateway) BaseBitMask() uint32 {
 	return 0
 }
+
+
 
