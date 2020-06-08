@@ -15,7 +15,7 @@ service PacketCollection {
 
 // Main PacketSummary protobuf
 message PacketSummary {
-  uint32  CapID = 1   ;
+  uint32  CapID = 1   ;  // registered CapturePoint ID this packetsummary originates from
   uint32  SrcIP = 2     ;
   uint32  SrcMac = 3   ;
   uint32  DstIP = 4     ;
@@ -25,9 +25,13 @@ message PacketSummary {
 
 // Request to Register a New Capturepoint
 message RegisterCapturePoint {
-  string message = 1;
+  string CollectorID = 1;  // Unique Identifier for Source Collector
+  uint32 Netaddr = 2; // Network Address of the local subnet for this capturepoint
+  uint32 Netmask = 3; // Netmask Mask of the local subnet for this capturepoint
+  string NicName = 4; // system name for NIC of capturepoint - used for reporting
+  uint32 DefaultGateway = 5 ; // MAC address of the default upstream gateway for this subnet
 }
 
 message RegisterResponse {
-  string message = 1;
+  string CaptureID = 1;
 }
