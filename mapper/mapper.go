@@ -5,10 +5,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+type captureid uint32
+
 // The Mapper is the core processor for calculating possible subnet masks from collected traffic
 type Mapper struct {
 	ingest        *ingester
-	capturepoints []*capture.CapturePoint // packet capture source tracking for collectors
 	events        chan MappingEvent       // meta-events from a given mapper
 }
 
@@ -31,7 +32,6 @@ func (m *Mapper) Events() (events <-chan MappingEvent) {
 }
 
 
-
 func NewMapper() *Mapper {
 	return &Mapper{
 		capturepoints: nil,
@@ -45,23 +45,23 @@ type MappingEvent struct {
 	message       string
 }
 
-// Primary Process loop for the mapper
-func (m *Mapper) processPacketSummary() {
-
-}
 
 // Add a known capturepoint to this collector - usually the subnet of the monitored NIC
 func (m *Mapper) AddCapturePoint(point *capture.CapturePoint) error {
+ 	if m.ingest == nil {
+ 		return errors.Errorf("cannot add capture points until ingestor declared")
+	}
+
 	if point == nil {
 		return errors.Errorf("refusing to add nil capturepoint")
 	}
-	for _, p := range m.capturepoints {
+
+	for _, p := range m.ingest.capturepoints {
 		if p.LocalNet.IP.Equal(point.LocalNet.IP) {
 			return errors.Errorf("capturepoint %s/%s already added", point.LocalNet.IP.String(), point.LocalNet.Mask.String())
 		}
 	}
-	m.capturepoints = append(m.capturepoints, point)
-
+	m.ingest.capturepoints[point.ID] = point
 
 
 	return nil

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"github.com/databeast/goatherd/capture"
 	"github.com/databeast/goatherd/packets"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
@@ -20,6 +21,7 @@ var ingestBufferSize = 10000
 type ingester struct {
 	grpcsrv *grpc.Server
 	incoming chan packets.PacketSummary
+	capturepoints map[captureid]*capture.CapturePoint // packet capture source tracking for collectors
 }
 
 func (i *ingester) Ingest(server packets.PacketCollection_IngestServer) error {
@@ -52,8 +54,34 @@ func (i *ingester) Ingest(server packets.PacketCollection_IngestServer) error {
 }
 
 // Register a new Remote CapturePoint
-func (i *ingester) CapturePoint(ctx context.Context, point *packets.RegisterCapturePoint) (*packets.RegisterResponse, error) {
-	panic("implement me")
+func (i *ingester) CapturePoint(ctx context.Context, req *packets.RegisterCapturePoint) (resp *packets.RegisterResponse, err error) {
+	// idempotency for registering the same collector subnet
+	for id, capture := range i.capturepoints {
+		if binary.BigEndian.Uint32(capture.LocalNet.IP) == req.Netaddr {
+			// we already know this subnet
+			resp := &packets.RegisterResponse{
+				CaptureID:  uint32(id),
+			}
+			return resp, nil
+		}
+	}
+	// ok, its a new capture point
+	point, err := capture.NewCapturePoint()
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
+	point.LocalNet = net.IPNet{}
+	binary.BigEndian.PutUint32(point.LocalNet.IP, req.Netaddr)
+	point.LocalNet.Mask = net.IPMask{}
+	binary.BigEndian.PutUint32(point.LocalNet.Mask, req.Netmask)
+
+	i.capturepoints[captureid(point.ID)] = point
+
+	resp = &packets.RegisterResponse{
+		CaptureID:            point.ID,
+	}
+	return resp, nil
+
 }
 
 func (m *Mapper) enableLocalIngest() (err error){
