@@ -4,13 +4,13 @@ import (
 	"github.com/databeast/goatherd/packets"
 )
 
-// General Packet Summary Processor
-type PacketIngester struct {
+// Incoming Packet Summary Routing and Channels
+type ingester struct {
 	incoming chan packets.PacketSummary
 }
 
 // Channel for Ingesting processed packets into the Mapper
-func (i *PacketIngester) Ingest() (ingestchannel chan packets.PacketSummary) {
+func (i *ingester) Ingest() (ingestchannel chan packets.PacketSummary) {
 
 	return nil
 }
