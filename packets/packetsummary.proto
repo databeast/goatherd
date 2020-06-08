@@ -1,0 +1,33 @@
+syntax = "proto3";
+import "google/protobuf/empty.proto";
+package packets;
+
+
+// Distributed Collector Aggregation Service
+
+service PacketCollection {
+  // packetsummary ingest stream
+  rpc Ingest (stream PacketSummary) returns (google.protobuf.Empty) {}
+
+  // Register a CapturePoint
+  rpc CapturePoint (RegisterCapturePoint) returns (RegisterResponse) {}
+}
+
+// Main PacketSummary protobuf
+message PacketSummary {
+  uint32  CapID = 1   ;
+  uint32  SrcIP = 2     ;
+  uint32  SrcMac = 3   ;
+  uint32  DstIP = 4     ;
+  uint32  DstMac = 5    ;
+  uint32  TTL = 6   ;
+}
+
+// Request to Register a New Capturepoint
+message RegisterCapturePoint {
+  string message = 1;
+}
+
+message RegisterResponse {
+  string message = 1;
+}

@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"github.com/databeast/goatherd/packets"
 	"github.com/pkg/errors"
+	"math/rand"
 	"net"
 	"sync"
 )
@@ -21,6 +22,7 @@ type ipmap map[uint8]map[uint8]map[uint8]uint8
 // An individual Capture Point
 // Usually there will be only one of these, but distributed capture mode requires one for each capture node
 type CapturePoint struct {
+	ID   	 uint32    // unique ID for this capturepoint
 	LocalNet net.IPNet // local subnet
 	Nic      string    // displayname of the NIC this capturepoint is bound to
 
@@ -133,4 +135,21 @@ func (c *CapturePoint) BaseBitMask() (bitmask uint32) {
 
 	//bitmask = c.LocalNet.Mask.
 	return binary.BigEndian.Uint32(c.LocalNet.IP) // IP traffic is always calculated bigendian
+}
+
+func genCapPointID() uint32 {
+	return rand.Uint32()
+}
+
+func NewCapturePoint() (point *CapturePoint, err error) {
+	point = &CapturePoint{
+		ID:               genCapPointID(),
+		LocalNet:         net.IPNet{},
+		Nic:              "",
+		macmappings:      make(map[macaddrstr]ipmap),
+		mapmu:            &sync.Mutex{},
+		defaultGateway:   nil,
+		supernetGateways: nil,
+		subnetGateways:   nil,
+	}
 }

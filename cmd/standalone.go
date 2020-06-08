@@ -32,6 +32,7 @@ var standaloneCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(standaloneCmd)
+	standaloneCmd.PersistentFlags().String("pcap", "", "load from a .pcap file")
 
 	// Here you will define your flags and configuration settings.
 
