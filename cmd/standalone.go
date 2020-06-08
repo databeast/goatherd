@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/databeast/goatherd/capture"
 	"github.com/databeast/goatherd/collectors"
 	"github.com/databeast/goatherd/mapper"
 	"github.com/spf13/cobra"
@@ -25,8 +26,17 @@ var standaloneCmd = &cobra.Command{
 			return
 		}
 		mapper := mapper.NewMapper()
-		err = mapper.AddCollector(collector)
+		cappoint, err := capture.NewCapturePoint()
+		if err != nil {
+			println(err.Error())
+			return
+		}
+		err = mapper.AddCapturePoint(cappoint)
 		mapper.Begin()
+		if err != nil {
+			println(err.Error())
+			return
+		}
 	},
 }
 
