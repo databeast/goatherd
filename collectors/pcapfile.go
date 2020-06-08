@@ -46,8 +46,10 @@ func (c *PcapFileCollector) Load(filename string) (err error) {
 	return err
 }
 
-func (c *PcapFileCollector) Start() {
-	c.ingestFile()
+func (c *PcapFileCollector) Start() (err error) {
+	go c.ingestFile()
+	return nil
+
 }
 
 func (c *PcapFileCollector) ingestFile() {

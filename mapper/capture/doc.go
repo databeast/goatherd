@@ -8,3 +8,5 @@ package capture
 // that are available beyond the given gateway.
 
 // Determine upstream via broadest range of variant bits.
+
+// Track Most likely Subnets by finding bitsets that match TTL steps

@@ -8,11 +8,11 @@ import (
 
 // Tracking of Identified gateways on the local subnet
 type Gateway struct {
-	ipaddr      net.IP
-	arpaddr     net.HardwareAddr
+	ipaddr  net.IP
+	arpaddr net.HardwareAddr
 
-	isUpstream  bool
-	isnat       bool
+	isUpstream bool
+	isnat      bool
 
 	packetcount int64
 
@@ -34,4 +34,8 @@ func NewGateway(addr net.IP, arpaddr net.HardwareAddr) *Gateway {
 // the XORable bitmask that encompasses all traffic coming from this network
 func (g *Gateway) BaseBitMask() uint32 {
 	return 0
+}
+
+func (c *CapturePoint) recheckGateways() {
+
 }

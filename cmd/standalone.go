@@ -25,7 +25,7 @@ var standaloneCmd = &cobra.Command{
 			return
 		}
 		mapper := mapper.NewMapper()
-		err = mapper.Collect(collector)
+		err = mapper.AddCollector(collector)
 		mapper.Begin()
 	},
 }

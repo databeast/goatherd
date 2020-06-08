@@ -17,10 +17,10 @@ type collectorBase struct {
 	pipeline    chan packets.PacketSummary
 }
 
-func (c *collectorBase) Start() {
-
+func (c *collectorBase) Start() error {
+	return nil
 }
 
-func (c *collectorBase) Stop() {
-
+func (c *collectorBase) Stop() error {
+	return nil
 }

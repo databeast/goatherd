@@ -30,7 +30,8 @@ func (m *Mapper) AddCollector(collector collectors.Collector) error {
 	go func() { // commence collector eventloop
 		for {
 			p := <-collector.Packets()
-			m.ingester.Ingest() <- p
+			println(p.TTL)
+			//m.ingester.Ingest() <- p
 			// TODO: introduce select for sigv quit shutdown
 		}
 	}()
@@ -59,4 +60,5 @@ func (m *Mapper) processPacketSummary() {
 // Add a known capturepoint to this collector - usually the subnet of the monitored NIC
 func (m *Mapper) AddCapturePoint() error {
 
+	return nil
 }

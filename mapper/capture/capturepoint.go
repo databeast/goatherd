@@ -3,6 +3,7 @@ package capture
 import (
 	"encoding/binary"
 	"github.com/databeast/goatherd/packets"
+	"github.com/pkg/errors"
 	"net"
 	"sync"
 )
@@ -11,7 +12,8 @@ type macaddrstr string
 
 // sanity check for valid hex string representation of MAC addrs
 func (m macaddrstr) validate() bool {
-
+	// just check this is 40-bit Hex
+	return true
 }
 
 type ipmap map[uint8]map[uint8]map[uint8]uint8
@@ -25,28 +27,67 @@ type CapturePoint struct {
 	macmappings map[macaddrstr]ipmap // primary data capture - IP address to MAC addrs
 	mapmu       *sync.Mutex
 
-
-	SupernetGateways map[macaddrstr]Gateway // gateways that lead to supernets
-	SubnetGateways   map[macaddrstr]Gateway // gateways that lead to subnets
+	defaultGateway   *Gateway
+	supernetGateways map[macaddrstr]*Gateway // gateways that lead to supernets
+	subnetGateways   map[macaddrstr]*Gateway // gateways that lead to subnets
 
 }
 
-func (c *CapturePoint) processPacketSummary(summary packets.PacketSummary) {
+// Assign a given hardware Address as the known default Gateway
+// TODO: multihomed support
+func (c *CapturePoint) SetDefaultGateway(macddr net.HardwareAddr) (err error) {
+	// if we already know about this, just copy it over
+	if gateway, ok := c.supernetGateways[macaddrstr(macddr)] ; ok { // default gateways art by definition upstream gateways
+		c.defaultGateway = gateway
+	}
+
+	return err
+}
+
+func (c *CapturePoint) processPacketSummary(summary packets.PacketSummary) (err error) {
+	// input sanity checks
+	if macaddrstr(summary.SrcMac).validate() == false {
+		return errors.WithStack(errors.Errorf("unusable MAC addr %q", summary.SrcMac))
+	}
+	if macaddrstr(summary.DstMac).validate() == false {
+		return errors.WithStack(errors.Errorf("unusable MAC addr %q", summary.DstMac))
+	}
 
 	// track the IPs to the MAC they are reachable via
 	c.trackAddrToMac(summary.SrcIP, summary.SrcMac)
 	c.trackAddrToMac(summary.DstIP, summary.DstMac)
 
-	// Now determine which gateway entry we're working with
+	// Now determine what gateway pairing we're working with
 
-	// we only care about Src addresses on downstream gateways  for TTL-tracking bitmasks
+	var srcgateway *Gateway
+	var dstgateway *Gateway
 
+	// if by virtue of our capturepoint, we know our Default Gateway, we know it is by definition and upstream gateway
+	if c.defaultGateway != nil {
 
+	}
+
+	if gateway, ok := c.supernetGateways[macaddrstr(summary.SrcMac)]; ok { // connection from upstream to downstream
+
+		srcgateway = gateway
+
+	}
+	if gateway, ok := c.subnetGateways[macaddrstr(summary.SrcMac)]; ok { // connection from upstream to downstream
+
+		srcgateway = gateway
+	}
+
+	srcgateway.BaseBitMask()
+	dstgateway.BaseBitMask()
+	// we only care about Src Connections addresses on downstream gateways  for TTL-tracking bitmasks
 
 	// now process the TTLs seen on our addressbits.
 
+	return nil
 }
 
+// associate a given IP Address to the local Hardware Address (MAC) it was sent to
+// This is the primary mechanism for determining Gateways
 func (c *CapturePoint) trackAddrToMac(addr net.IP, mac net.HardwareAddr) {
 	var ok bool
 	var octet0 ipmap
@@ -90,6 +131,6 @@ func (c *CapturePoint) BaseBitMask() (bitmask uint32) {
 	// 11000000.10101000.00000000 .00000001
 	// 11111111.11111111.11111111
 
-	bitmask = c.LocalNet.Mask
+	//bitmask = c.LocalNet.Mask.
 	return binary.BigEndian.Uint32(c.LocalNet.IP) // IP traffic is always calculated bigendian
 }

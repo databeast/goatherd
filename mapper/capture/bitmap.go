@@ -3,6 +3,8 @@
 
 package capture
 
+import "net"
+
 type bitposition uint8
 
 const (
@@ -46,10 +48,16 @@ type ttltrack map[uint8]int64
 // if a given bitposition remains Nil, it is assumed to be invariant
 type BitMap map[bitposition]ttltrack
 
-func (c *CapturePoint) trackBitTTL(position bitposition, ttlstep uint8) {
-	c.bitmu.Lock()
-	c.mapping[position][ttlstep] += 1
-	c.bitmu.Unlock()
+func (g *Gateway) trackBitTTL(position bitposition, ttlstep uint8) {
+	g.bitmu.Lock()
+	g.bitmapping[position][ttlstep] += 1
+	g.bitmu.Unlock()
+}
+
+// break down address into bigendian bits, marking the probable step for each
+// This function is useless if applied on source addresses coming from upstream gateways
+func decomposeTtlBits(addr net.IPAddr, ttl uint8) {
+
 }
 
 // start with a given subnet and prefix
