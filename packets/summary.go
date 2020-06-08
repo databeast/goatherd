@@ -2,8 +2,8 @@ package packets
 
 import (
 	"github.com/pkg/errors"
-	"net"
 	"github.com/vmihailenco/msgpack/v5"
+	"net"
 )
 
 type PacketSummary struct {
@@ -12,7 +12,7 @@ type PacketSummary struct {
 	DstIP  net.IP
 	DstMac net.HardwareAddr
 	TTL    uint8
-	CapID  uint32 	//capturepoint this packetsummary was taken from
+	CapID  uint32 //capturepoint this packetsummary was taken from
 }
 
 func (s PacketSummary) Marshall() ([]byte, error) {

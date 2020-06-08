@@ -9,7 +9,7 @@ import (
 // The Mapper is the core processor for calculating possible subnet masks from collected traffic
 type Mapper struct {
 	collectors    []collectors.Collector // packet capture collector instances
-	ingest   	  *ingester
+	ingest        *ingester
 	capturepoints []*capture.CapturePoint // packet capture source tracking for collectors
 	events        chan MappingEvent       // meta-events from a given mapper
 }
@@ -28,8 +28,6 @@ func (m *Mapper) Begin() (err error) {
 func (m *Mapper) Events() (events <-chan MappingEvent) {
 	return m.events
 }
-
-
 
 // Engage mapper with a
 func (m *Mapper) AddCollector(collector collectors.Collector) (err error) {
@@ -84,4 +82,3 @@ func (m *Mapper) AddCapturePoint(point *capture.CapturePoint) error {
 
 	return nil
 }
-

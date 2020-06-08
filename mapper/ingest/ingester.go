@@ -20,10 +20,9 @@ func (i *ingestsrv) CapturePoint(ctx context.Context, point *packets.RegisterCap
 
 var ingester *ingestsrv
 
-
 func BeginRemoteIngest() {
 	ingester = &ingestsrv{
-		grpcsrv:  grpc.NewServer(),
+		grpcsrv: grpc.NewServer(),
 	}
 
 	packets.RegisterPacketCollectionServer(ingester.grpcsrv, ingester)

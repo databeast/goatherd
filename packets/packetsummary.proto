@@ -7,14 +7,14 @@ package packets;
 
 service PacketCollection {
   // packetsummary ingest stream
-  rpc Ingest (stream PacketSummary) returns (google.protobuf.Empty) {}
+  rpc Ingest (stream PacketSummaryMessage) returns (google.protobuf.Empty) {}
 
   // Register a CapturePoint
   rpc CapturePoint (RegisterCapturePoint) returns (RegisterResponse) {}
 }
 
 // Main PacketSummary protobuf
-message PacketSummary {
+message PacketSummaryMessage {
   uint32  CapID = 1   ;  // registered CapturePoint ID this packetsummary originates from
   uint32  SrcIP = 2     ;
   uint32  SrcMac = 3   ;

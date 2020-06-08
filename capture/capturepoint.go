@@ -22,7 +22,7 @@ type ipmap map[uint8]map[uint8]map[uint8]uint8
 // An individual Capture Point
 // Usually there will be only one of these, but distributed capture mode requires one for each capture node
 type CapturePoint struct {
-	ID   	 uint32    // unique ID for this capturepoint
+	ID       uint32    // unique ID for this capturepoint
 	LocalNet net.IPNet // local subnet
 	Nic      string    // displayname of the NIC this capturepoint is bound to
 
@@ -39,7 +39,7 @@ type CapturePoint struct {
 // TODO: multihomed support
 func (c *CapturePoint) SetDefaultGateway(macddr net.HardwareAddr) (err error) {
 	// if we already know about this, just copy it over
-	if gateway, ok := c.supernetGateways[macaddrstr(macddr)] ; ok { // default gateways art by definition upstream gateways
+	if gateway, ok := c.supernetGateways[macaddrstr(macddr)]; ok { // default gateways art by definition upstream gateways
 		c.defaultGateway = gateway
 	}
 
@@ -152,4 +152,5 @@ func NewCapturePoint() (point *CapturePoint, err error) {
 		supernetGateways: nil,
 		subnetGateways:   nil,
 	}
+	return point, nil
 }
