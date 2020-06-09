@@ -21,28 +21,31 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// collectorCmd represents the collector command
-var collectorCmd = &cobra.Command{
-	Use:   "collector",
-	Short: "remote packet collector mode",
-	Long: `in this mode goatherd will only collect packet summaries, and forware them to a remote 
-    collector for aggregration and processing `,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("collector called")
-	},
+// mapperCmd represents the mapper command
+var mapperCmd = &cobra.Command{
+	Use:   "mapper",
+	Short: "A brief description of your command",
+	Long: `A longer description that spans multiple lines and likely contains examples
+and usage of using your command. For example:
 
+Cobra is a CLI library for Go that empowers applications.
+This application is a tool to generate the needed files
+to quickly create a Cobra application.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("mapper called")
+	},
 }
 
 func init() {
-	rootCmd.AddCommand(collectorCmd)
+	rootCmd.AddCommand(mapperCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// collectorCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// mapperCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// collectorCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// mapperCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
