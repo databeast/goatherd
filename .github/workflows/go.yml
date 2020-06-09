@@ -24,7 +24,7 @@ jobs:
 
     - name: Get dependencies
       run: |
-        apt-get install libpcap-dev
+        sudo apt-get install libpcap-dev
         go mod download
 
     - name: Build
