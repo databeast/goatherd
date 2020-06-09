@@ -14,24 +14,28 @@ var standaloneCmd = &cobra.Command{
 	Short: "run goatherd in local capture standalone mode",
 	Long:  `goatherd will run the collector and mapper components simultaneously, from a local interface or .pcap file`,
 	Run: func(cmd *cobra.Command, args []string) {
+		var err error
 		fmt.Println("standalone called")
-		collector, err := collectors.NewPcapFileCollector()
+		collector := collectors.NewPcapCollector()
+
+		// file mode
+		err = collector.LoadFile("sample.pcap")
 		if err != nil {
 			println(err.Error())
 			return
 		}
-		err = collector.Load("sample.pcap")
+		mapper, err := mapper.NewMapper(mapper.MapperSettings{})
 		if err != nil {
 			println(err.Error())
 			return
 		}
-		mapper := mapper.NewMapper()
+
 		cappoint, err := capture.NewCapturePoint()
 		if err != nil {
 			println(err.Error())
 			return
 		}
-		err = mapper.AddCapturePoint(cappoint)
+		err = mapper.AttachCapturePoint(cappoint)
 		mapper.Begin()
 		if err != nil {
 			println(err.Error())

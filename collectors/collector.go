@@ -24,14 +24,7 @@ type collectorBase struct {
 	disconnect  chan struct{} // disconnect signal
 }
 
-func (c *collectorBase) Start() error {
-	return nil
-}
-
-func (c *collectorBase) Stop() error {
-	return nil
-}
-
+// connect to a remote mapper over gRPC
 func (c *collectorBase) Connect(remote net.IPAddr) error {
 	conn, err := grpc.Dial(remote.String())
 	if err != nil {
@@ -39,6 +32,12 @@ func (c *collectorBase) Connect(remote net.IPAddr) error {
 	}
 
 	c.mapperconn = packets.NewPacketCollectionClient(conn)
+	return nil
+}
+
+// enable local-only mode when no remote mapper configured
+func (c *collectorBase) local() error {
+
 	return nil
 }
 

@@ -16,11 +16,9 @@ type Mapper struct {
 // Commence Packet processing and Mapping
 func (m *Mapper) Begin() (err error) {
 
-	if len(m.capturepoints) == 0 {
+	if len(m.ingest.capturepoints) == 0 {
 		return errors.Errorf("refusing to start with no capturepoints")
 	}
-
-
 
 
 	return nil
@@ -31,12 +29,22 @@ func (m *Mapper) Events() (events <-chan MappingEvent) {
 	return m.events
 }
 
+type MapperSettings struct {
+	Remote string
+}
 
-func NewMapper() *Mapper {
-	return &Mapper{
-		capturepoints: nil,
+func NewMapper(settings MapperSettings) (mapper *Mapper, err error) {
+	mapper =  &Mapper{
+		ingest: nil,
 		events:        make(chan MappingEvent, 100),
 	}
+	if settings.Remote == "" {
+		err = mapper.enableLocalIngest()
+		if err != nil {
+			return nil , err
+		}
+	}
+	return mapper, nil
 }
 
 // information events from the mapping process
@@ -47,7 +55,7 @@ type MappingEvent struct {
 
 
 // Add a known capturepoint to this collector - usually the subnet of the monitored NIC
-func (m *Mapper) AddCapturePoint(point *capture.CapturePoint) error {
+func (m *Mapper) AttachCapturePoint(point *capture.CapturePoint) error {
  	if m.ingest == nil {
  		return errors.Errorf("cannot add capture points until ingestor declared")
 	}
@@ -61,7 +69,7 @@ func (m *Mapper) AddCapturePoint(point *capture.CapturePoint) error {
 			return errors.Errorf("capturepoint %s/%s already added", point.LocalNet.IP.String(), point.LocalNet.Mask.String())
 		}
 	}
-	m.ingest.capturepoints[point.ID] = point
+	m.ingest.capturepoints[captureid(point.ID)] = point
 
 
 	return nil
