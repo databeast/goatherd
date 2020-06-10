@@ -30,7 +30,6 @@ var collectorCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("collector called")
 	},
-
 }
 
 func init() {

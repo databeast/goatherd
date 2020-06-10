@@ -8,8 +8,8 @@ import (
 	"github.com/databeast/goatherd/packets"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
-	"net"
 	"google.golang.org/grpc/status"
+	"net"
 	//"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	//"net"
@@ -19,8 +19,8 @@ var ingestBufferSize = 10000
 
 // Incoming Packet Summary Routing and Channels
 type ingester struct {
-	grpcsrv *grpc.Server
-	incoming chan packets.PacketSummary
+	grpcsrv       *grpc.Server
+	incoming      chan packets.PacketSummary
 	capturepoints map[captureid]*capture.CapturePoint // packet capture source tracking for collectors
 }
 
@@ -60,7 +60,7 @@ func (i *ingester) CapturePoint(ctx context.Context, req *packets.RegisterCaptur
 		if binary.BigEndian.Uint32(point.LocalNet.IP) == req.Netaddr {
 			// we already know this subnet
 			resp := &packets.RegisterResponse{
-				CaptureID:  uint32(id),
+				CaptureID: uint32(id),
 			}
 			return resp, nil
 		}
@@ -78,7 +78,7 @@ func (i *ingester) CapturePoint(ctx context.Context, req *packets.RegisterCaptur
 	i.capturepoints[captureid(point.ID)] = point
 
 	resp = &packets.RegisterResponse{
-		CaptureID:            point.ID,
+		CaptureID: point.ID,
 	}
 	return resp, nil
 
@@ -87,23 +87,17 @@ func (i *ingester) CapturePoint(ctx context.Context, req *packets.RegisterCaptur
 func (c *Mapper) Ingest(incoming <-chan packets.PacketSummary) error {
 	var p packets.PacketSummary
 	for {
-		p = <- incoming
+		p = <-incoming
 		c.ingest.incoming <- p
 	}
 }
 
-
-
-
-
-
-
-func (m *Mapper) enableLocalIngest() (err error){
+func (m *Mapper) enableLocalIngest() (err error) {
 	if m.ingest != nil {
 		return errors.Errorf("ingester already exists")
 	}
 	m.ingest = &ingester{
-		grpcsrv: grpc.NewServer(),
+		grpcsrv:  grpc.NewServer(),
 		incoming: make(chan packets.PacketSummary, ingestBufferSize),
 	}
 	return nil
@@ -115,7 +109,7 @@ func (m *Mapper) enableRemoteIngest(laddr net.IP, port uint16) (err error) {
 	}
 
 	m.ingest = &ingester{
-		grpcsrv: grpc.NewServer(),
+		grpcsrv:  grpc.NewServer(),
 		incoming: make(chan packets.PacketSummary, ingestBufferSize),
 	}
 
@@ -133,8 +127,6 @@ func (m *Mapper) enableRemoteIngest(laddr net.IP, port uint16) (err error) {
 
 	return nil
 }
-
-
 
 // Channel for Reading incoming packets into the Mapper
 func (i *ingester) Packets() (ingestchannel <-chan packets.PacketSummary) {

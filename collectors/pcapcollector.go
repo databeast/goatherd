@@ -22,10 +22,10 @@ const (
 )
 
 var (
-	packetbuffer int32  = 1024
-	device       string = "eth0"
-	snapshot_len int32  = 1024
-	promiscuous  bool   = false
+	packetbuffer int32         = 1024
+	device       string        = "eth0"
+	snapshot_len int32         = 1024
+	promiscuous  bool          = false
 	timeout      time.Duration = 30 * time.Second
 )
 
@@ -38,7 +38,7 @@ func NewPcapCollector() (collector *PcapCollector) {
 			mapperconn:  nil,
 			disconnect:  make(chan struct{}),
 		},
-		pcapdata:      nil,
+		pcapdata: nil,
 	}
 	return collector
 }
@@ -90,22 +90,18 @@ func (c *PcapCollector) OpenNic(nicname string) (err error) {
 	return nil
 }
 
-
 func (c *PcapCollector) Start() {
 	go c.collect()
 }
-
 
 func (c *PcapCollector) Stop() {
 	c.pcapdata.Close()
 }
 
-
 // Interface Declaration to pull packets from the Collector
 func (c *PcapCollector) Packets() <-chan packets.PacketSummary {
 	return c.pipeline
 }
-
 
 // check available NICs to match against requested one
 func (c *PcapCollector) ListNics() {
@@ -127,7 +123,6 @@ func (c *PcapCollector) ListNics() {
 		}
 	}
 }
-
 
 func (c *PcapCollector) collect() {
 	packetSource := gopacket.NewPacketSource(c.pcapdata, c.pcapdata.LinkType())

@@ -46,7 +46,7 @@ func (c *CapturePoint) SetDefaultGateway(macddr net.HardwareAddr) (err error) {
 	return err
 }
 
-func (c *CapturePoint) processPacketSummary(summary packets.PacketSummary) (err error) {
+func (c *CapturePoint) ProcessPacketSummary(summary packets.PacketSummary) (err error) {
 	// input sanity checks
 	if macaddrstr(summary.SrcMac).validate() == false {
 		return errors.WithStack(errors.Errorf("unusable MAC addr %q", summary.SrcMac))

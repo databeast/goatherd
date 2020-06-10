@@ -10,8 +10,8 @@ type captureid uint32
 
 // The Mapper is the core processor for calculating possible subnet masks from collected traffic
 type Mapper struct {
-	ingest        *ingester
-	events        chan MappingEvent       // meta-events from a given mapper
+	ingest *ingester
+	events chan MappingEvent // meta-events from a given mapper
 }
 
 // Commence Packet processing and Mapping
@@ -22,14 +22,22 @@ func (m *Mapper) Begin() (err error) {
 	}
 	var p packets.PacketSummary
 	for {
-		p = <- m.ingest.Packets()
+		p = <-m.ingest.Packets()
 
 		// route to appropriate capturepoint
-
+		if point, ok := m.ingest.capturepoints[captureid(p.CapID)]; ok {
+			go func() {
+				err = point.ProcessPacketSummary(p)
+				if err != nil {
+					//TODO: need error tracking through Events channel
+				}
+			}()
+		} else {
+			// why are we getting packets from an unregistered capturepoint?
+		}
 
 	}
 
-	return nil
 }
 
 //subscribe to event messages from the mapper
@@ -42,14 +50,14 @@ type MapperSettings struct {
 }
 
 func NewMapper(settings MapperSettings) (mapper *Mapper, err error) {
-	mapper =  &Mapper{
+	mapper = &Mapper{
 		ingest: nil,
-		events:        make(chan MappingEvent, 100),
+		events: make(chan MappingEvent, 100),
 	}
 	if settings.Remote == "" {
 		err = mapper.enableLocalIngest()
 		if err != nil {
-			return nil , err
+			return nil, err
 		}
 	}
 	return mapper, nil
@@ -57,15 +65,14 @@ func NewMapper(settings MapperSettings) (mapper *Mapper, err error) {
 
 // information events from the mapping process
 type MappingEvent struct {
-	fromCapturePoint string  // CapID this came from
-	message       string
+	fromCapturePoint string // CapID this came from
+	message          string
 }
-
 
 // Add a known capturepoint to this collector - usually the subnet of the monitored NIC
 func (m *Mapper) AttachCapturePoint(point *capture.CapturePoint) error {
- 	if m.ingest == nil {
- 		return errors.Errorf("cannot add capture points until ingestor declared")
+	if m.ingest == nil {
+		return errors.Errorf("cannot add capture points until ingestor declared")
 	}
 
 	if point == nil {
@@ -78,7 +85,6 @@ func (m *Mapper) AttachCapturePoint(point *capture.CapturePoint) error {
 		}
 	}
 	m.ingest.capturepoints[captureid(point.ID)] = point
-
 
 	return nil
 }

@@ -50,23 +50,23 @@ func (c *collectorBase) transmit() (err error) {
 	defer cancel()
 
 	select {
-		case p = <-c.pipeline:
-			go func(p packets.PacketSummary) {
-				msg := &packets.PacketSummaryMessage{
-					CapID:                p.CapID,
-					SrcIP:                binary.BigEndian.Uint32(p.SrcIP) ,
-					SrcMac:               binary.BigEndian.Uint32(p.SrcMac),
-					DstIP:                binary.BigEndian.Uint32(p.DstIP),
-					DstMac:               binary.BigEndian.Uint32(p.DstMac),
-					TTL:                  uint32(p.TTL),
-				}
-				err = stream.Send(msg)
-				//TODO: differentiate between loss of connection and recoverable
-			}(p)
+	case p = <-c.pipeline:
+		go func(p packets.PacketSummary) {
+			msg := &packets.PacketSummaryMessage{
+				CapID:  p.CapID,
+				SrcIP:  binary.BigEndian.Uint32(p.SrcIP),
+				SrcMac: binary.BigEndian.Uint32(p.SrcMac),
+				DstIP:  binary.BigEndian.Uint32(p.DstIP),
+				DstMac: binary.BigEndian.Uint32(p.DstMac),
+				TTL:    uint32(p.TTL),
+			}
+			err = stream.Send(msg)
+			//TODO: differentiate between loss of connection and recoverable
+		}(p)
 
-		case <-c.disconnect:
-			// TODO: sigv disconnect cleanup
-			return errors.Errorf("sigv recieved")
+	case <-c.disconnect:
+		// TODO: sigv disconnect cleanup
+		return errors.Errorf("sigv recieved")
 	}
 	return nil
 }
