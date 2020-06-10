@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"github.com/databeast/goatherd/capture"
+	"github.com/databeast/goatherd/packets"
 	"github.com/pkg/errors"
 )
 
@@ -19,7 +20,14 @@ func (m *Mapper) Begin() (err error) {
 	if len(m.ingest.capturepoints) == 0 {
 		return errors.Errorf("refusing to start with no capturepoints")
 	}
+	var p packets.PacketSummary
+	for {
+		p = <- m.ingest.Packets()
 
+		// route to appropriate capturepoint
+
+
+	}
 
 	return nil
 }

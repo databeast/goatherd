@@ -56,8 +56,8 @@ func (i *ingester) Ingest(server packets.PacketCollection_IngestServer) error {
 // Register a new Remote CapturePoint
 func (i *ingester) CapturePoint(ctx context.Context, req *packets.RegisterCapturePoint) (resp *packets.RegisterResponse, err error) {
 	// idempotency for registering the same collector subnet
-	for id, capture := range i.capturepoints {
-		if binary.BigEndian.Uint32(capture.LocalNet.IP) == req.Netaddr {
+	for id, point := range i.capturepoints {
+		if binary.BigEndian.Uint32(point.LocalNet.IP) == req.Netaddr {
 			// we already know this subnet
 			resp := &packets.RegisterResponse{
 				CaptureID:  uint32(id),
@@ -83,6 +83,20 @@ func (i *ingester) CapturePoint(ctx context.Context, req *packets.RegisterCaptur
 	return resp, nil
 
 }
+
+func (c *Mapper) Ingest(incoming <-chan packets.PacketSummary) error {
+	var p packets.PacketSummary
+	for {
+		p = <- incoming
+		c.ingest.incoming <- p
+	}
+}
+
+
+
+
+
+
 
 func (m *Mapper) enableLocalIngest() (err error){
 	if m.ingest != nil {
