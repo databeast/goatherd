@@ -2,6 +2,7 @@ package collectors
 
 import (
 	"fmt"
+	"github.com/databeast/goatherd/capture"
 	"github.com/databeast/goatherd/packets"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -73,10 +74,10 @@ func (c *PcapCollector) OpenNic(nicname string) (err error) {
 		return err
 	}
 
-	//err = c.pcapdata.SetBPFFilter(synFlagFilter)
-	//if err != nil {
-	//	return err
-	//}
+	err = c.pcapdata.SetBPFFilter(synFlagFilter)
+	if err != nil {
+		return err
+	}
 	
 	println("Listening on Eth0")
 	packetSource := gopacket.NewPacketSource(c.pcapdata, c.pcapdata.LinkType())
@@ -88,7 +89,8 @@ func (c *PcapCollector) OpenNic(nicname string) (err error) {
 	return nil
 }
 
-func (c *PcapCollector) Start() {
+func (c *PcapCollector) Start(point *capture.CapturePoint) {
+
 	go c.collect()
 }
 

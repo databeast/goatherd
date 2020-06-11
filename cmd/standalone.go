@@ -58,7 +58,7 @@ func standaloneMode(cmd *cobra.Command, args []string) {
 		return
 	}
 	println("Commencing Ingestion")
-	collector.Start()
+	collector.Start(cappoint)
 
 	println("Commencing Mapping")
 	err = standaloneMapper.Begin()
@@ -71,7 +71,7 @@ func standaloneMode(cmd *cobra.Command, args []string) {
 		println(err.Error())
 		return
 	}
-	
+
 }
 
 func init() {

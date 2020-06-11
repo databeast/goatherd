@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"fmt"
 	"github.com/databeast/goatherd/capture"
 	"github.com/databeast/goatherd/packets"
 	"github.com/pkg/errors"
@@ -29,7 +30,7 @@ func (m *Mapper) Begin() (err error) {
 	var p packets.PacketSummary
 	for p = range m.ingest.Packets() {
 		//p = <-m.ingest.Packets()
-		println("Mapping Packet")
+		fmt.Printf("Mapping Packet: %v\n", p)
 		// route to appropriate capturepoint
 		if point, ok := m.ingest.capturepoints[captureid(p.CapID)]; ok {
 			go func() {
@@ -39,6 +40,7 @@ func (m *Mapper) Begin() (err error) {
 				}
 			}()
 		} else {
+			println("no known capturepoint ID %q for packet", p.CapID)
 			// why are we getting packets from an unregistered capturepoint?
 		}
 	}

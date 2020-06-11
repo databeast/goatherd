@@ -17,6 +17,7 @@ type Collector interface {
 
 // Base Packet Collector
 type collectorBase struct {
+	CapPointId  uint32
 	MapperHost  string // Mapper this collector is sending to
 	PacketCount int    //running count of observed packets
 	pipeline    chan packets.PacketSummary
