@@ -8,7 +8,6 @@ import (
 	"github.com/google/gopacket/pcap"
 	"github.com/pkg/errors"
 	"log"
-	"os"
 	"time"
 )
 
@@ -53,11 +52,8 @@ func (c *PcapCollector) LoadFile(filename string) (err error) {
 	if c.pcapdata != nil {
 		return errors.Errorf(errMsgExistingPcapSource)
 	}
-	pcapfile, err := os.Open(filename)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	c.pcapdata, err = pcap.OpenOfflineFile(pcapfile)
+
+	c.pcapdata, err = pcap.OpenOffline(filename)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -74,17 +70,19 @@ func (c *PcapCollector) OpenNic(nicname string) (err error) {
 
 	c.pcapdata, err = pcap.OpenLive(device, snapshot_len, promiscuous, timeout)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	err = c.pcapdata.SetBPFFilter(synFlagFilter)
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	//err = c.pcapdata.SetBPFFilter(synFlagFilter)
+	//if err != nil {
+	//	return err
+	//}
+	
+	println("Listening on Eth0")
 	packetSource := gopacket.NewPacketSource(c.pcapdata, c.pcapdata.LinkType())
 	for packet := range packetSource.Packets() {
 		// Do something with a packet here.
+		fmt.Println("recieved packet")
 		fmt.Println(packet)
 	}
 	return nil
@@ -129,14 +127,13 @@ func (c *PcapCollector) collect() {
 	var summary packets.PacketSummary
 
 	packetSource := gopacket.NewPacketSource(c.pcapdata, c.pcapdata.LinkType())
-
+	println("loaded packet source")
 	// start reading packets one by one
-	for {
-		packet = <- packetSource.Packets()
-		println("incoming packet")
+	for packet = range packetSource.Packets(){
 		ethernetLayer := packet.Layer(layers.LayerTypeEthernet)
 		if ethernetLayer == nil {
 			continue // can't work with this
+			packetErr += 1
 		}
 
 		ethernetPacket, _ := ethernetLayer.(*layers.Ethernet)
@@ -147,6 +144,7 @@ func (c *PcapCollector) collect() {
 		ipLayer := packet.Layer(layers.LayerTypeIPv4)
 		if ipLayer == nil {
 			continue //cant work with this
+			packetErr += 1
 		}
 		ip, _ := ipLayer.(*layers.IPv4)
 		summary.SrcIP = ip.SrcIP
@@ -156,5 +154,7 @@ func (c *PcapCollector) collect() {
 
 		println("read packet")
 		c.pipeline <- summary
+		packetCount += 1
 	}
+	CollectorStats()
 }

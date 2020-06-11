@@ -25,10 +25,11 @@ func (m *Mapper) Begin() (err error) {
 		return errors.Errorf("refusing to start with no capturepoints")
 	}
 
+	go func() {
 	var p packets.PacketSummary
-	for {
-		p = <-m.ingest.Packets()
-
+	for p = range m.ingest.Packets() {
+		//p = <-m.ingest.Packets()
+		println("Mapping Packet")
 		// route to appropriate capturepoint
 		if point, ok := m.ingest.capturepoints[captureid(p.CapID)]; ok {
 			go func() {
@@ -40,9 +41,9 @@ func (m *Mapper) Begin() (err error) {
 		} else {
 			// why are we getting packets from an unregistered capturepoint?
 		}
-
 	}
-
+	}()
+	return
 }
 
 //subscribe to event messages from the mapper

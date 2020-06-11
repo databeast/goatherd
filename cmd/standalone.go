@@ -24,13 +24,21 @@ func standaloneMode(cmd *cobra.Command, args []string) {
 
 	if cmd.Flag("pcap").Value.String() != "" {
 		fmt.Printf("Loading pcap file: %q\n", cmd.Flag("pcap").Value.String())
+		// file mode
+		err = collector.LoadFile( cmd.Flag("pcap").Value.String() )
+		if err != nil {
+			println(err.Error())
+			return
+		}
+	} else {
+		fmt.Printf("Loading from Eth0\n")
+		err = collector.OpenNic("eth0")
+		if err != nil {
+			println(err.Error())
+			return
+		}
 	}
-	// file mode
-	err = collector.LoadFile( cmd.Flag("pcap").Value.String() )
-	if err != nil {
-		println(err.Error())
-	return
-	}
+
 	standaloneMapper, err := mapper.NewMapper(mapper.MapperSettings{})
 	if err != nil {
 		println(err.Error())
@@ -43,7 +51,7 @@ func standaloneMode(cmd *cobra.Command, args []string) {
 		println(err.Error())
 		return
 	}
-
+	println("attaching Default Capture Point")
 	err = standaloneMapper.AttachCapturePoint(cappoint)
 	if err != nil {
 		println(err.Error())
@@ -58,7 +66,12 @@ func standaloneMode(cmd *cobra.Command, args []string) {
 		println(err.Error())
 		return
 	}
-
+	err = standaloneMapper.Ingest(collector.Packets())
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	
 }
 
 func init() {
