@@ -125,13 +125,15 @@ func (c *PcapCollector) ListNics() {
 }
 
 func (c *PcapCollector) collect() {
-	packetSource := gopacket.NewPacketSource(c.pcapdata, c.pcapdata.LinkType())
 	var packet gopacket.Packet
 	var summary packets.PacketSummary
+
+	packetSource := gopacket.NewPacketSource(c.pcapdata, c.pcapdata.LinkType())
+
 	// start reading packets one by one
 	for {
-		packet = <-packetSource.Packets()
-
+		packet = <- packetSource.Packets()
+		println("incoming packet")
 		ethernetLayer := packet.Layer(layers.LayerTypeEthernet)
 		if ethernetLayer == nil {
 			continue // can't work with this
@@ -152,6 +154,7 @@ func (c *PcapCollector) collect() {
 
 		summary.TTL = ip.TTL
 
+		println("read packet")
 		c.pipeline <- summary
 	}
 }

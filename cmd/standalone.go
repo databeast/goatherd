@@ -13,35 +13,52 @@ var standaloneCmd = &cobra.Command{
 	Use:   "standalone",
 	Short: "run goatherd in local capture standalone mode",
 	Long:  `goatherd will run the collector and mapper components simultaneously, from a local interface or .pcap file`,
-	Run: func(cmd *cobra.Command, args []string) {
-		var err error
-		fmt.Println("standalone called")
-		collector := collectors.NewPcapCollector()
+	Run: standaloneMode,
+}
 
-		// file mode
-		err = collector.LoadFile("sample.pcap")
-		if err != nil {
-			println(err.Error())
-			return
-		}
-		mapper, err := mapper.NewMapper(mapper.MapperSettings{})
-		if err != nil {
-			println(err.Error())
-			return
-		}
+func standaloneMode(cmd *cobra.Command, args []string) {
+	var err error
+	fmt.Println("Goatherd Standalone Mode engaged")
 
-		cappoint, err := capture.NewCapturePoint()
-		if err != nil {
-			println(err.Error())
-			return
-		}
-		err = mapper.AttachCapturePoint(cappoint)
-		mapper.Begin()
-		if err != nil {
-			println(err.Error())
-			return
-		}
-	},
+	collector := collectors.NewPcapCollector()
+
+	if cmd.Flag("pcap").Value.String() != "" {
+		fmt.Printf("Loading pcap file: %q\n", cmd.Flag("pcap").Value.String())
+	}
+	// file mode
+	err = collector.LoadFile( cmd.Flag("pcap").Value.String() )
+	if err != nil {
+		println(err.Error())
+	return
+	}
+	standaloneMapper, err := mapper.NewMapper(mapper.MapperSettings{})
+	if err != nil {
+		println(err.Error())
+		return
+	}
+
+	println("Creating Default Capture Point")
+	cappoint, err := capture.NewCapturePoint()
+	if err != nil {
+		println(err.Error())
+		return
+	}
+
+	err = standaloneMapper.AttachCapturePoint(cappoint)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	println("Commencing Ingestion")
+	collector.Start()
+
+	println("Commencing Mapping")
+	err = standaloneMapper.Begin()
+	if err != nil {
+		println(err.Error())
+		return
+	}
+
 }
 
 func init() {

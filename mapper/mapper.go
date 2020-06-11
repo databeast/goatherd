@@ -8,6 +8,10 @@ import (
 
 type captureid uint32
 
+const (
+	mapperDefaultPort = 8432
+)
+
 // The Mapper is the core processor for calculating possible subnet masks from collected traffic
 type Mapper struct {
 	ingest *ingester
@@ -20,6 +24,7 @@ func (m *Mapper) Begin() (err error) {
 	if len(m.ingest.capturepoints) == 0 {
 		return errors.Errorf("refusing to start with no capturepoints")
 	}
+
 	var p packets.PacketSummary
 	for {
 		p = <-m.ingest.Packets()
@@ -84,7 +89,9 @@ func (m *Mapper) AttachCapturePoint(point *capture.CapturePoint) error {
 			return errors.Errorf("capturepoint %s/%s already added", point.LocalNet.IP.String(), point.LocalNet.Mask.String())
 		}
 	}
+
 	m.ingest.capturepoints[captureid(point.ID)] = point
 
 	return nil
 }
+

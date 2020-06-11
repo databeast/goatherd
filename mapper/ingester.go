@@ -84,11 +84,11 @@ func (i *ingester) CapturePoint(ctx context.Context, req *packets.RegisterCaptur
 
 }
 
-func (c *Mapper) Ingest(incoming <-chan packets.PacketSummary) error {
+func (m *Mapper) Ingest(incoming <-chan packets.PacketSummary) error {
 	var p packets.PacketSummary
 	for {
 		p = <-incoming
-		c.ingest.incoming <- p
+		m.ingest.incoming <- p
 	}
 }
 
@@ -99,6 +99,7 @@ func (m *Mapper) enableLocalIngest() (err error) {
 	m.ingest = &ingester{
 		grpcsrv:  grpc.NewServer(),
 		incoming: make(chan packets.PacketSummary, ingestBufferSize),
+		capturepoints: make(map[captureid]*capture.CapturePoint),
 	}
 	return nil
 }
