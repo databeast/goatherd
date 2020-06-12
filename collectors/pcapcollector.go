@@ -128,6 +128,10 @@ func (c *PcapCollector) collect() {
 	var packet gopacket.Packet
 	var summary packets.PacketSummary
 
+
+	CANT COLLECT WITHOUT CAPTUREPOINT ID
+
+ n
 	packetSource := gopacket.NewPacketSource(c.pcapdata, c.pcapdata.LinkType())
 	println("loaded packet source")
 	// start reading packets one by one
