@@ -60,6 +60,8 @@ func (c *PcapCollector) LoadFile(filename string) (err error) {
 	}
 	err = c.pcapdata.SetBPFFilter(synFlagFilter)
 
+//	LOAD CAPTURE POINT
+
 	return nil
 }
 
@@ -90,7 +92,7 @@ func (c *PcapCollector) OpenNic(nicname string) (err error) {
 }
 
 func (c *PcapCollector) Start(point *capture.CapturePoint) {
-
+	c.cappoints = append(c.cappoints, point)
 	go c.collect()
 }
 
@@ -128,18 +130,21 @@ func (c *PcapCollector) collect() {
 	var packet gopacket.Packet
 	var summary packets.PacketSummary
 
+	// TODO: support for multiple capturepoints on a single connectors
+	if len(c.cappoints) == 0 {
+		panic("no capture point defined")
+	}
+	summary.CapID = c.cappoints[0].ID
 
-	CANT COLLECT WITHOUT CAPTUREPOINT ID
-
- n
 	packetSource := gopacket.NewPacketSource(c.pcapdata, c.pcapdata.LinkType())
 	println("loaded packet source")
 	// start reading packets one by one
-	for packet = range packetSource.Packets(){
+	for packet = range packetSource.Packets() {
+
 		ethernetLayer := packet.Layer(layers.LayerTypeEthernet)
 		if ethernetLayer == nil {
-			continue // can't work with this
 			packetErr += 1
+			continue // can't work with this
 		}
 
 		ethernetPacket, _ := ethernetLayer.(*layers.Ethernet)
@@ -149,8 +154,8 @@ func (c *PcapCollector) collect() {
 		// Let's see if the packet is IP (even though the ether type told us)
 		ipLayer := packet.Layer(layers.LayerTypeIPv4)
 		if ipLayer == nil {
-			continue //cant work with this
 			packetErr += 1
+			continue //cant work with this
 		}
 		ip, _ := ipLayer.(*layers.IPv4)
 		summary.SrcIP = ip.SrcIP

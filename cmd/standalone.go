@@ -51,6 +51,7 @@ func standaloneMode(cmd *cobra.Command, args []string) {
 		println(err.Error())
 		return
 	}
+
 	println("attaching Default Capture Point")
 	err = standaloneMapper.AttachCapturePoint(cappoint)
 	if err != nil {

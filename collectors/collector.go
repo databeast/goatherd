@@ -3,6 +3,7 @@ package collectors
 import (
 	"context"
 	"encoding/binary"
+	"github.com/databeast/goatherd/capture"
 	"github.com/databeast/goatherd/packets"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -17,9 +18,9 @@ type Collector interface {
 
 // Base Packet Collector
 type collectorBase struct {
-	CapPointId  uint32
 	MapperHost  string // Mapper this collector is sending to
 	PacketCount int    //running count of observed packets
+	cappoints   []*capture.CapturePoint
 	pipeline    chan packets.PacketSummary
 	mapperconn  packets.PacketCollectionClient
 	disconnect  chan struct{} // disconnect signal
@@ -70,4 +71,16 @@ func (c *collectorBase) transmit() (err error) {
 		return errors.Errorf("sigv recieved")
 	}
 	return nil
+}
+
+func (c *collectorBase) NewCapturePoint() (err error) {
+
+	println("Creating Default Capture Point")
+	cappoint, err := capture.NewCapturePoint()
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	c.cappoints = append(c.cappoints, cappoint)
+	return
 }

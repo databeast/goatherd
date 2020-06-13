@@ -40,7 +40,7 @@ func (m *Mapper) Begin() (err error) {
 				}
 			}()
 		} else {
-			println("no known capturepoint ID %q for packet", p.CapID)
+			fmt.Printf("no known capturepoint ID %d for packet\n", p.CapID)
 			// why are we getting packets from an unregistered capturepoint?
 		}
 	}
