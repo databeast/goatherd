@@ -86,10 +86,12 @@ func (i *ingester) CapturePoint(ctx context.Context, req *packets.RegisterCaptur
 
 func (m *Mapper) Ingest(incoming <-chan packets.PacketSummary) error {
 	var p packets.PacketSummary
-	for {
-		p = <-incoming
+	for p = range incoming {
+		//p = <-incoming
 		m.ingest.incoming <- p
 	}
+	println("ingest complete")
+	return nil
 }
 
 func (m *Mapper) enableLocalIngest() (err error) {
