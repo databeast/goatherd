@@ -97,33 +97,33 @@ func (c *CapturePoint) trackAddrToMac(addr net.IP, mac net.HardwareAddr) {
 	var octet2 map[uint8]uint8
 
 	// seen this mac before? initialize if not
+	c.mapmu.Lock()
 	if octet0, ok = c.macmappings[macaddrstr(mac)]; !ok {
-		c.mapmu.Lock()
 		c.macmappings[macaddrstr(mac)] = make(ipmap)
 		octet0 = c.macmappings[macaddrstr(mac)]
-		c.mapmu.Unlock()
 	}
+	c.mapmu.Unlock()
 
+	c.mapmu.Lock()
 	// see octet 0 before? initialize if not
 	if octet1, ok = octet0[addr[0]]; !ok {
-		c.mapmu.Lock()
 		octet0[addr[0]] = make(map[uint8]map[uint8]uint8)
 		octet1 = octet0[addr[0]]
-		c.mapmu.Unlock()
 	}
+	c.mapmu.Unlock()
 
+	c.mapmu.Lock()
 	if octet2, ok = octet1[addr[1]]; !ok {
-		c.mapmu.Lock()
 		octet1[addr[1]] = make(map[uint8]uint8)
 		octet2 = octet1[addr[1]]
-		c.mapmu.Unlock()
 	}
+	c.mapmu.Unlock()
 
+	c.mapmu.Lock()
 	if _, ok = octet2[addr[2]]; !ok {
-		c.mapmu.Lock()
 		octet2[addr[2]] = addr[3]
-		c.mapmu.Unlock()
 	}
+	c.mapmu.Unlock()
 
 }
 
