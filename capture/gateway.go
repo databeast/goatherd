@@ -23,8 +23,8 @@ type Gateway struct {
 	bitmu      *sync.Mutex
 }
 
-func NewGateway(addr net.IP, arpaddr net.HardwareAddr) *Gateway {
-	return &Gateway{
+func NewGateway(addr net.IP, arpaddr net.HardwareAddr) (g *Gateway) {
+	 g = &Gateway{
 		ipaddr:      addr,
 		arpaddr:     arpaddr,
 		isUpstream:  false,
@@ -33,6 +33,10 @@ func NewGateway(addr net.IP, arpaddr net.HardwareAddr) *Gateway {
 		isnat:       false,
 		bmux:  		 &sync.Mutex{},
 	}
+	for i := 0 ; i <32 ; i += i  {
+		g.bitmapping[bitposition(i)] = &ttlbittrack{}
+	}
+	return g
 }
 
 // the XORable bitmask that encompasses all traffic coming from this network
@@ -52,24 +56,32 @@ func (g *Gateway) processPacket(summary *packets.PacketSummary) (err error) {
 		return err
 	}
 
+	// We're going to be appling the perceived TTL steps to bits as we process them, lets get that now
+	var ttlstep uint8
+	ttlstep, err = guessTTLstep(summary.TTL)
+	if err != nil {
+		return err
+	}
+
 	// first, lets figure out our variant bits from this gateway
 	for i, b := range bits {
+		g.bmux.Lock() // might change this later if locking during the whole packet op is quicker
 		switch g.bitmapping[bitposition(i)].value {
 		case UNSET:  //
-			if b {
+			if b { // we're seeing this bit being set for the first time
 				g.bitmapping[bitposition(i)].value = SET
+				g.bitmapping[bitposition(i)].ttlcounts[ttlstep] += 1
 			}
 		case SET: // if we now encounter this bit unset again, we know it is variant
 			if !b {
 				g.bitmapping[bitposition(i)].value = VARIANT
+				g.bitmapping[bitposition(i)].ttlcounts[ttlstep] += 1
 			}
-		case VARIANT: // we've already determined it's variant, once is enough
-
+		case VARIANT: // we've already determined it's variant, once is enough to know that.
+			g.bitmapping[bitposition(i)].ttlcounts[ttlstep] += 1
 		}
+		g.bmux.Unlock()
 	}
-
-
-
 
 	return nil
 
