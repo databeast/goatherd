@@ -18,22 +18,22 @@ type Gateway struct {
 
 	packetcount int64
 
-	bmux 	*sync.Mutex
+	bmux       *sync.Mutex
 	bitmapping BitMap // TTL-Per-Bit tracking for this capture point
 	bitmu      *sync.Mutex
 }
 
 func NewGateway(addr net.IP, arpaddr net.HardwareAddr) (g *Gateway) {
-	 g = &Gateway{
+	g = &Gateway{
 		ipaddr:      addr,
 		arpaddr:     arpaddr,
 		isUpstream:  false,
 		bitmapping:  BitMap{},
 		packetcount: 0,
 		isnat:       false,
-		bmux:  		 &sync.Mutex{},
+		bmux:        &sync.Mutex{},
 	}
-	for i := 0 ; i <32 ; i += i  {
+	for i := 0; i < 32; i += i {
 		g.bitmapping[bitposition(i)] = &ttlbittrack{}
 	}
 	return g
@@ -67,7 +67,7 @@ func (g *Gateway) processPacket(summary *packets.PacketSummary) (err error) {
 	for i, b := range bits {
 		g.bmux.Lock() // might change this later if locking during the whole packet op is quicker
 		switch g.bitmapping[bitposition(i)].value {
-		case UNSET:  //
+		case UNSET: //
 			if b { // we're seeing this bit being set for the first time
 				g.bitmapping[bitposition(i)].value = SET
 				g.bitmapping[bitposition(i)].ttlcounts[ttlstep] += 1

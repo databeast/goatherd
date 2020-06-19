@@ -47,17 +47,17 @@ const (
 type BitMap map[bitposition]*ttlbittrack
 
 type ttlbittrack struct {
-	value bitval   // either a fixed value, or mark that it is variant
-	ttlcounts map[uint8]int64  // TTL observed, with number of packets observed with this value on this bit
+	value     bitval          // either a fixed value, or mark that it is variant
+	ttlcounts map[uint8]int64 // TTL observed, with number of packets observed with this value on this bit
 }
 
 type bitval int8
-const  (
-	UNSET bitval = 0
-	SET bitval = 1
+
+const (
+	UNSET   bitval = 0
+	SET     bitval = 1
 	VARIANT bitval = 2
 )
-
 
 func (g *Gateway) trackBitTTL(position bitposition, ttlstep uint8) {
 	g.bitmu.Lock()

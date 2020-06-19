@@ -79,9 +79,6 @@ func (c *CapturePoint) ProcessPacketSummary(summary packets.PacketSummary) (err 
 
 	}
 
-
-
-
 	srcgateway.BaseBitMask()
 	dstgateway.BaseBitMask()
 

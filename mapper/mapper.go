@@ -27,23 +27,23 @@ func (m *Mapper) Begin() (err error) {
 	}
 
 	go func() {
-	var p packets.PacketSummary
-	for p = range m.ingest.Packets() {
-		//p = <-m.ingest.Packets()
-		fmt.Printf("Mapping Packet: %v\n", p)
-		// route to appropriate capturepoint
-		if point, ok := m.ingest.capturepoints[captureid(p.CapID)]; ok {
-			go func() {
-				err = point.ProcessPacketSummary(p)
-				if err != nil {
-					//TODO: need error tracking through Events channel
-				}
-			}()
-		} else {
-			fmt.Printf("no known capturepoint ID %d for packet\n", p.CapID)
-			// why are we getting packets from an unregistered capturepoint?
+		var p packets.PacketSummary
+		for p = range m.ingest.Packets() {
+			//p = <-m.ingest.Packets()
+			fmt.Printf("Mapping Packet: %v\n", p)
+			// route to appropriate capturepoint
+			if point, ok := m.ingest.capturepoints[captureid(p.CapID)]; ok {
+				go func() {
+					err = point.ProcessPacketSummary(p)
+					if err != nil {
+						//TODO: need error tracking through Events channel
+					}
+				}()
+			} else {
+				fmt.Printf("no known capturepoint ID %d for packet\n", p.CapID)
+				// why are we getting packets from an unregistered capturepoint?
+			}
 		}
-	}
 	}()
 	return
 }
@@ -97,4 +97,3 @@ func (m *Mapper) AttachCapturePoint(point *capture.CapturePoint) error {
 
 	return nil
 }
-

@@ -60,7 +60,7 @@ func (c *PcapCollector) LoadFile(filename string) (err error) {
 	}
 	err = c.pcapdata.SetBPFFilter(synFlagFilter)
 
-//	LOAD CAPTURE POINT
+	//	LOAD CAPTURE POINT
 
 	return nil
 }
@@ -80,7 +80,7 @@ func (c *PcapCollector) OpenNic(nicname string) (err error) {
 	if err != nil {
 		return err
 	}
-	
+
 	println("Listening on Eth0")
 	packetSource := gopacket.NewPacketSource(c.pcapdata, c.pcapdata.LinkType())
 	for packet := range packetSource.Packets() {

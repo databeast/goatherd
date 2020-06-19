@@ -13,7 +13,7 @@ var standaloneCmd = &cobra.Command{
 	Use:   "standalone",
 	Short: "run goatherd in local capture standalone mode",
 	Long:  `goatherd will run the collector and mapper components simultaneously, from a local interface or .pcap file`,
-	Run: standaloneMode,
+	Run:   standaloneMode,
 }
 
 func standaloneMode(cmd *cobra.Command, args []string) {
@@ -25,7 +25,7 @@ func standaloneMode(cmd *cobra.Command, args []string) {
 	if cmd.Flag("pcap").Value.String() != "" {
 		fmt.Printf("Loading pcap file: %q\n", cmd.Flag("pcap").Value.String())
 		// file mode
-		err = collector.LoadFile( cmd.Flag("pcap").Value.String() )
+		err = collector.LoadFile(cmd.Flag("pcap").Value.String())
 		if err != nil {
 			println(err.Error())
 			return

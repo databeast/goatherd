@@ -10,7 +10,6 @@ import "fmt"
 
 // TODO: Track Overall Packet Stats for End-Of-Run debriefing.
 
-
 var packetCount int
 var packetErr int
 

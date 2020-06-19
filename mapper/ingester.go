@@ -99,8 +99,8 @@ func (m *Mapper) enableLocalIngest() (err error) {
 		return errors.Errorf("ingester already exists")
 	}
 	m.ingest = &ingester{
-		grpcsrv:  grpc.NewServer(),
-		incoming: make(chan packets.PacketSummary, ingestBufferSize),
+		grpcsrv:       grpc.NewServer(),
+		incoming:      make(chan packets.PacketSummary, ingestBufferSize),
 		capturepoints: make(map[captureid]*capture.CapturePoint),
 	}
 	return nil
