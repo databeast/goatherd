@@ -4,6 +4,8 @@ package capture
 // TTL provides the best guess at how many routing hops a packet has already taken, to reach
 // the point at which is was observed.
 
+//TODO: see if we can determine downstream NAT gateways by variant TTL counts from it
+
 var MaxSubnetHops uint8 = 6 // at what level do we consider the maximum number of possible routing hops
 
 func guessTTLstep(ttl uint8) (step uint8, err error) {

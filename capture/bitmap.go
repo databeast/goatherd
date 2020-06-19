@@ -44,7 +44,7 @@ const (
 
 // TTL Tracking for each variable bit position
 // if a given bitposition remains Nil, it is assumed to be invariant
-type BitMap map[bitposition]*ttlbittrack
+type BitMap [32]*ttlbittrack
 
 type ttlbittrack struct {
 	value     bitval          // either a fixed value, or mark that it is variant

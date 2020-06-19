@@ -102,6 +102,7 @@ func (g *Gateway) processPacket(summary packets.PacketSummary) (err error) {
 // turn IP addresses into a bitmap style array of bools, its just easier to work with that way
 func decomposeToBits(addr net.IP) (bits [32]bool, err error) {
 
+	//ipint := binary.BigEndian.Uint32(addr)
 	//NOTE: validate this goes bigendian in all archs
 	for i, x := range addr {
 		for j := 0; j < 8; j++ {
