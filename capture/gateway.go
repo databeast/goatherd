@@ -100,11 +100,7 @@ func (g *Gateway) processPacket(summary packets.PacketSummary) (err error) {
 		}
 		g.bmux.Unlock()
 	}
-
-	for _, v := range g.bitmapping {
-		fmt.Printf("%v\n", v)
-	}
-
+	
 	return nil
 
 }
@@ -124,6 +120,7 @@ func decomposeToBits(addr net.IP) (bits [32]bool, err error) {
 
 	return bits, err
 }
+
 
 func (c *CapturePoint) recheckGateways() {
 

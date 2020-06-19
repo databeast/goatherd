@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/databeast/goatherd/capture"
 	"github.com/databeast/goatherd/collectors"
 	"github.com/databeast/goatherd/mapper"
@@ -19,12 +18,12 @@ var standaloneCmd = &cobra.Command{
 
 func standaloneMode(cmd *cobra.Command, args []string) {
 	var err error
-	fmt.Println("Goatherd Standalone Mode engaged")
+	logger.Printf("Goatherd Standalone Mode engaged")
 
 	collector := collectors.NewPcapCollector()
 
 	if cmd.Flag("pcap").Value.String() != "" {
-		fmt.Printf("Loading pcap file: %q\n", cmd.Flag("pcap").Value.String())
+		logger.Printf("Loading pcap file: %q\n", cmd.Flag("pcap").Value.String())
 		// file mode
 		err = collector.LoadFile(cmd.Flag("pcap").Value.String())
 		if err != nil {
@@ -32,7 +31,7 @@ func standaloneMode(cmd *cobra.Command, args []string) {
 			return
 		}
 	} else {
-		fmt.Printf("Loading from Eth0\n")
+		logger.Printf("Loading from Eth0\n")
 		err = collector.OpenNic("eth0")
 		if err != nil {
 			println(err.Error())
@@ -42,7 +41,7 @@ func standaloneMode(cmd *cobra.Command, args []string) {
 
 	standaloneMapper, err := mapper.NewMapper(mapper.MapperSettings{})
 	if err != nil {
-		println(err.Error())
+		logger.Printf(err.Error())
 		return
 	}
 
@@ -55,13 +54,13 @@ func standaloneMode(cmd *cobra.Command, args []string) {
 	println("Setting Test Default Gateway")
 	mac,err := net.ParseMAC("00:15:5d:4c:07:d8")
 	if err != nil {
-		println(err.Error())
+		logger.Printf(err.Error())
 		return
 	}
 
 	err = cappoint.SetDefaultGateway(mac)
 	if err != nil {
-		println(err.Error())
+		logger.Printf(err.Error())
 		return
 	}
 
