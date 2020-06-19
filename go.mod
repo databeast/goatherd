@@ -3,7 +3,9 @@ module github.com/databeast/goatherd
 go 1.13
 
 require (
+	github.com/Workiva/go-datastructures v1.0.52 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/golang-collections/go-datastructures v0.0.0-20150211160725-59788d5eb259
 	github.com/golang/protobuf v1.3.4
 	github.com/google/gopacket v1.1.17
 	github.com/mitchellh/go-homedir v1.1.0

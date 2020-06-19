@@ -2,6 +2,9 @@
 package capture
 
 import (
+	"github.com/databeast/goatherd/packets"
+	"github.com/golang-collections/go-datastructures/bitarray"
+	"github.com/pkg/errors"
 	"net"
 	"sync"
 )
@@ -34,6 +37,27 @@ func NewGateway(addr net.IP, arpaddr net.HardwareAddr) *Gateway {
 // the XORable bitmask that encompasses all traffic coming from this network
 func (g *Gateway) BaseBitMask() uint32 {
 	return 0
+}
+
+// process this packet summary, now we know its source host originated beyond this gateway
+func (g *Gateway) processPacket(summary *packets.PacketSummary) (err error) {
+	// sanity checks for developer oversight
+	if summary.SrcMac.String() != string(g.arpaddr) && summary.DstMac.String() != string(g.arpaddr) {
+		return errors.Errorf("summary incorrectly passed to wrong gateway to process")
+	}
+
+
+
+	return nil
+
+}
+
+// turn IP addresses into a bitmap style array of bools, its just easier to work with that way
+func decomposeToBits(addr net.IPAddr) (bits [32]bool, err error) {
+	array := bitarray.NewBitArray()
+	println(array)
+
+	return bits, err
 }
 
 func (c *CapturePoint) recheckGateways() {

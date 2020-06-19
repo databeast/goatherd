@@ -42,7 +42,6 @@ func (c *CapturePoint) SetDefaultGateway(macddr net.HardwareAddr) (err error) {
 	if gateway, ok := c.supernetGateways[macaddrstr(macddr)]; ok { // default gateways art by definition upstream gateways
 		c.defaultGateway = gateway
 	}
-
 	return err
 }
 
@@ -60,27 +59,32 @@ func (c *CapturePoint) ProcessPacketSummary(summary packets.PacketSummary) (err 
 	c.trackAddrToMac(summary.DstIP, summary.DstMac)
 
 	// Now determine what gateway pairing we're working with
+	// remember that packet summaries are always new connections from src to dst
 
 	var srcgateway *Gateway
 	var dstgateway *Gateway
 
 	// if by virtue of our capturepoint, we know our Default Gateway, we know it is by definition and upstream gateway
 	if c.defaultGateway != nil {
-
+		if summary.DstMac.String() == c.defaultGateway.arpaddr.String() { //we know we're headed upstream
+			dstgateway = c.defaultGateway
+		}
 	}
 
 	if gateway, ok := c.supernetGateways[macaddrstr(summary.SrcMac)]; ok { // connection from upstream to downstream
-
 		srcgateway = gateway
+	} else if gateway, ok := c.subnetGateways[macaddrstr(summary.SrcMac)]; ok { // connection from upstream to downstream
+		srcgateway = gateway
+	} else { // gateway is not yet identified as either upstream or downstream
 
 	}
-	if gateway, ok := c.subnetGateways[macaddrstr(summary.SrcMac)]; ok { // connection from upstream to downstream
 
-		srcgateway = gateway
-	}
+
+
 
 	srcgateway.BaseBitMask()
 	dstgateway.BaseBitMask()
+
 	// we only care about Src Connections addresses on downstream gateways  for TTL-tracking bitmasks
 
 	// now process the TTLs seen on our addressbits.
