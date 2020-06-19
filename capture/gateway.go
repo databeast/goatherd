@@ -21,7 +21,7 @@ type Gateway struct {
 
 	bmux       *sync.Mutex
 	bitmapping BitMap // TTL-Per-Bit tracking for this capture point
-	bitmu      *sync.Mutex
+
 }
 
 func NewGateway(addr net.IP, arpaddr net.HardwareAddr) (g *Gateway) {
@@ -55,21 +55,31 @@ func (g *Gateway) processPacket(summary packets.PacketSummary) (err error) {
 	// sanity checks for developer oversight
 	if summary.SrcMac.String() != g.arpaddr.String() && summary.DstMac.String() != g.arpaddr.String() {
 		errors.Errorf("summary incorrectly passed to wrong gateway to process")
+		// TODO: needs to error properly once I'm finished with core
 	}
+
+	g.packetcount += 1
+
 	// from here on out, we're just going to work with the IP address in a bitwise fashion. convert it to bitmap\
 	bits, err := decomposeToBits(summary.SrcIP)
 	if err != nil {
 		fmt.Printf("%s\n", err.Error())
 		return err
 	}
-	fmt.Printf("Source Bits: %v\n", bits)
 
-	// We're going to be appling the perceived TTL steps to bits as we process them, lets get that now
+	// We're going to be applying the perceived TTL steps to bits as we process them, lets get that now
 	var ttlstep uint8
 	ttlstep, err = guessTTLstep(summary.TTL)
 	if err != nil {
 		return err
 	}
+
+	// if the TTL step is 0, this is a local subnet-sourced packet, not originating via routing
+	// e.g from the gateway host itself
+	if ttlstep == 0 {
+
+	}
+
 
 	// first, lets figure out our variant bits from this gateway
 	for i, b := range bits {
@@ -78,8 +88,8 @@ func (g *Gateway) processPacket(summary packets.PacketSummary) (err error) {
 		case UNSET: //
 			if b { // we're seeing this bit being set for the first time
 				g.bitmapping[uint8(i)].value = SET
-				g.trackBitTTL(uint8(i), ttlstep)
 			}
+			g.trackBitTTL(uint8(i), ttlstep)
 		case SET: // if we now encounter this bit unset again, we know it is variant
 			if !b {
 				g.bitmapping[uint8(i)].value = VARIANT

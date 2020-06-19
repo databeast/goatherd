@@ -22,9 +22,8 @@ const (
 )
 
 func (g *Gateway) trackBitTTL(position uint8, ttlstep uint8) {
-	g.bitmu.Lock()
+	//NOT A THREAD-SAFE CALL, only use within existing mutex lock
 	g.bitmapping[position].ttlcounts[ttlstep] += 1
-	g.bitmu.Unlock()
 }
 
 
