@@ -35,7 +35,7 @@ func NewGateway(addr net.IP, arpaddr net.HardwareAddr) (g *Gateway) {
 		bmux:        &sync.Mutex{},
 	}
 	for i := 0; i < 32; i += 1 {
-		g.bitmapping[bitposition(i)] = &ttlbittrack{
+		g.bitmapping[uint8(i)] = &ttlbittrack{
 			value:     0,
 			ttlcounts: make(map[uint8]int64),
 		}
@@ -74,19 +74,19 @@ func (g *Gateway) processPacket(summary packets.PacketSummary) (err error) {
 	// first, lets figure out our variant bits from this gateway
 	for i, b := range bits {
 		g.bmux.Lock() // might change this later if locking during the whole packet op is quicker
-		switch g.bitmapping[bitposition(i)].value {
+		switch g.bitmapping[i].value {
 		case UNSET: //
 			if b { // we're seeing this bit being set for the first time
-				g.bitmapping[bitposition(i)].value = SET
-				g.bitmapping[bitposition(i)].ttlcounts[ttlstep] += 1
+				g.bitmapping[uint8(i)].value = SET
+				g.trackBitTTL(uint8(i), ttlstep)
 			}
 		case SET: // if we now encounter this bit unset again, we know it is variant
 			if !b {
-				g.bitmapping[bitposition(i)].value = VARIANT
-				g.bitmapping[bitposition(i)].ttlcounts[ttlstep] += 1
+				g.bitmapping[uint8(i)].value = VARIANT
+				g.trackBitTTL(uint8(i), ttlstep)
 			}
 		case VARIANT: // we've already determined it's variant, once is enough to know that.
-			g.bitmapping[bitposition(i)].ttlcounts[ttlstep] += 1
+			g.trackBitTTL(uint8(i), ttlstep)
 		}
 		g.bmux.Unlock()
 	}
