@@ -2,6 +2,7 @@
 package capture
 
 import (
+	"fmt"
 	"github.com/databeast/goatherd/packets"
 	"github.com/pkg/errors"
 	"net"
@@ -33,9 +34,13 @@ func NewGateway(addr net.IP, arpaddr net.HardwareAddr) (g *Gateway) {
 		isnat:       false,
 		bmux:        &sync.Mutex{},
 	}
-	for i := 0; i < 32; i += i {
-		g.bitmapping[bitposition(i)] = &ttlbittrack{}
+	for i := 0; i < 32; i += 1 {
+		g.bitmapping[bitposition(i)] = &ttlbittrack{
+			value:     0,
+			ttlcounts: make(map[uint8]int64),
+		}
 	}
+
 	return g
 }
 
@@ -45,16 +50,19 @@ func (g *Gateway) BaseBitMask() uint32 {
 }
 
 // process this packet summary, now we know its source host originated beyond this gateway
-func (g *Gateway) processPacket(summary *packets.PacketSummary) (err error) {
+func (g *Gateway) processPacket(summary packets.PacketSummary) (err error) {
+	fmt.Printf("Processing Packet on Gateway: %s\n", g.arpaddr.String())
 	// sanity checks for developer oversight
-	if summary.SrcMac.String() != string(g.arpaddr) && summary.DstMac.String() != string(g.arpaddr) {
-		return errors.Errorf("summary incorrectly passed to wrong gateway to process")
+	if summary.SrcMac.String() != g.arpaddr.String() && summary.DstMac.String() != g.arpaddr.String() {
+		errors.Errorf("summary incorrectly passed to wrong gateway to process")
 	}
 	// from here on out, we're just going to work with the IP address in a bitwise fashion. convert it to bitmap\
 	bits, err := decomposeToBits(summary.SrcIP)
 	if err != nil {
+		fmt.Printf("%s\n", err.Error())
 		return err
 	}
+	fmt.Printf("Source Bits: %v\n", bits)
 
 	// We're going to be appling the perceived TTL steps to bits as we process them, lets get that now
 	var ttlstep uint8
@@ -83,6 +91,10 @@ func (g *Gateway) processPacket(summary *packets.PacketSummary) (err error) {
 		g.bmux.Unlock()
 	}
 
+	for _, v := range g.bitmapping {
+		fmt.Printf("%v\n", v)
+	}
+
 	return nil
 
 }
@@ -90,6 +102,7 @@ func (g *Gateway) processPacket(summary *packets.PacketSummary) (err error) {
 // turn IP addresses into a bitmap style array of bools, its just easier to work with that way
 func decomposeToBits(addr net.IP) (bits [32]bool, err error) {
 
+	//NOTE: validate this goes bigendian in all archs
 	for i, x := range addr {
 		for j := 0; j < 8; j++ {
 			if (x<<uint(j))&0x80 == 0x80 {

@@ -6,6 +6,7 @@ import (
 	"github.com/databeast/goatherd/collectors"
 	"github.com/databeast/goatherd/mapper"
 	"github.com/spf13/cobra"
+	"net"
 )
 
 // standaloneCmd represents the standalone command
@@ -47,6 +48,18 @@ func standaloneMode(cmd *cobra.Command, args []string) {
 
 	println("Creating Default Capture Point")
 	cappoint, err := capture.NewCapturePoint()
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	println("Setting Test Default Gateway")
+	mac,err := net.ParseMAC("00:15:5d:4c:07:d8")
+	if err != nil {
+		println(err.Error())
+		return
+	}
+
+	err = cappoint.SetDefaultGateway(mac)
 	if err != nil {
 		println(err.Error())
 		return

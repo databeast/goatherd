@@ -37,11 +37,17 @@ type CapturePoint struct {
 
 // Assign a given hardware Address as the known default Gateway
 // TODO: multihomed support
-func (c *CapturePoint) SetDefaultGateway(macddr net.HardwareAddr) (err error) {
+func (c *CapturePoint) SetDefaultGateway(macaddr net.HardwareAddr) (err error) {
 	// if we already know about this, just copy it over
-	if gateway, ok := c.supernetGateways[macaddrstr(macddr)]; ok { // default gateways art by definition upstream gateways
+	if gateway, ok := c.supernetGateways[macaddrstr(macaddr)]; ok { // default gateways art by definition upstream gateways
 		c.defaultGateway = gateway
 	}
+
+	// TESTING ONLY
+	gate := NewGateway(net.IP{192,168,0,1}, macaddr)
+	c.defaultGateway = gate
+	// TESTING ONLY
+
 	return err
 }
 
@@ -82,6 +88,8 @@ func (c *CapturePoint) ProcessPacketSummary(summary packets.PacketSummary) (err 
 	srcgateway.BaseBitMask()
 	dstgateway.BaseBitMask()
 
+	// TEST MODE ONLY
+	c.defaultGateway.processPacket(summary)
 	// we only care about Src Connections addresses on downstream gateways  for TTL-tracking bitmasks
 
 	// now process the TTLs seen on our addressbits.
