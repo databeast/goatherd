@@ -2,6 +2,7 @@ package capture
 
 import (
 	"encoding/binary"
+	"fmt"
 	"github.com/databeast/goatherd/packets"
 	"github.com/pkg/errors"
 	"math/rand"
@@ -18,6 +19,21 @@ func (m macaddrstr) validate() bool {
 }
 
 type ipmap map[uint8]map[uint8]map[uint8]uint8
+
+// convert map to list of IP addresses
+func (m ipmap) List() (addrs []string) {
+	var addrstring string
+	for quad1, next1 := range m {
+		for quad2, next2 := range next1 {
+			for quad3, quad4 := range next2 {
+				addrstring = fmt.Sprintf("%d.%d.%d.%d", quad1,quad2,quad3,quad4)
+				addrs = append(addrs, addrstring)
+			}
+		}
+	}
+
+	return addrs
+}
 
 // An individual Capture Point
 // Usually there will be only one of these, but distributed capture mode requires one for each capture node
@@ -60,6 +76,8 @@ func (c *CapturePoint) ProcessPacketSummary(summary packets.PacketSummary) (err 
 		return errors.WithStack(errors.Errorf("unusable MAC addr %q", summary.DstMac))
 	}
 
+	// if the TTL Step is 0, we can likely assume this packet is from the local network.
+
 	// track the IPs to the MAC they are reachable via
 	c.trackAddrToMac(summary.SrcIP, summary.SrcMac)
 	c.trackAddrToMac(summary.DstIP, summary.DstMac)
@@ -84,6 +102,8 @@ func (c *CapturePoint) ProcessPacketSummary(summary packets.PacketSummary) (err 
 	} else { // gateway is not yet identified as either upstream or downstream
 
 	}
+
+
 
 	srcgateway.BaseBitMask()
 	dstgateway.BaseBitMask()
@@ -133,6 +153,8 @@ func (c *CapturePoint) trackAddrToMac(addr net.IP, mac net.HardwareAddr) {
 		octet2[addr[2]] = addr[3]
 	}
 	c.mapmu.Unlock()
+
+	c.recheckGateways()  // see if our updated knowledge identities new gateways
 
 }
 

@@ -120,6 +120,14 @@ func decomposeToBits(addr net.IP) (bits [32]bool, err error) {
 	return bits, err
 }
 
+// Re-examine our knowledge of IP/MAC mappings to see if we've identified a new gateway
 func (c *CapturePoint) recheckGateways() {
+	for mac, ipmap := range c.macmappings {
+		if len(ipmap.List()) > 1 { // more than one address served from here, potential gateway
+
+			// are the addresses all on the local subnet? hosts with multiple interface IPs are not necessarily gateway
+
+		}
+	}
 
 }
