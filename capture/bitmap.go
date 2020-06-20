@@ -3,7 +3,6 @@
 
 package capture
 
-
 // TTL Tracking for each variable bit position
 // if a given bitposition remains Nil, it is assumed to be invariant
 type BitMap [32]*ttlbittrack
@@ -25,7 +24,6 @@ func (g *Gateway) trackBitTTL(position uint8, ttlstep uint8) {
 	//NOT A THREAD-SAFE CALL, only use within existing mutex lock
 	g.bitmapping[position].ttlcounts[ttlstep] += 1
 }
-
 
 // start with a given subnet and prefix
 // 1101 0101 1101 0110 1000 0111 / 24

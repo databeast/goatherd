@@ -80,7 +80,6 @@ func (g *Gateway) processPacket(summary packets.PacketSummary) (err error) {
 
 	}
 
-
 	// first, lets figure out our variant bits from this gateway
 	for i, b := range bits {
 		g.bmux.Lock() // might change this later if locking during the whole packet op is quicker
@@ -100,7 +99,7 @@ func (g *Gateway) processPacket(summary packets.PacketSummary) (err error) {
 		}
 		g.bmux.Unlock()
 	}
-	
+
 	return nil
 
 }
@@ -120,7 +119,6 @@ func decomposeToBits(addr net.IP) (bits [32]bool, err error) {
 
 	return bits, err
 }
-
 
 func (c *CapturePoint) recheckGateways() {
 

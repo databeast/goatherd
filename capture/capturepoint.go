@@ -44,7 +44,7 @@ func (c *CapturePoint) SetDefaultGateway(macaddr net.HardwareAddr) (err error) {
 	}
 
 	// TESTING ONLY
-	gate := NewGateway(net.IP{192,168,0,1}, macaddr)
+	gate := NewGateway(net.IP{192, 168, 0, 1}, macaddr)
 	c.defaultGateway = gate
 	// TESTING ONLY
 

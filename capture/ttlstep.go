@@ -25,25 +25,25 @@ func guessTTLstep(ttl uint8) (step uint8, err error) {
 
 	// TTLs this high are rare, usually only from packets directly sourced from networking OSs
 	if ttl > (255 - MaxSubnetHops) {
-		step = 255-ttl
+		step = 255 - ttl
 		return
 	}
 
 	// This is the most common setting today for most client systems.
 	if ttl > (128 - MaxSubnetHops) {
-		step = 128-ttl
+		step = 128 - ttl
 		return
 	}
 
 	// common for several Unix variants, note that 60 is also a used base TTL in this range
 	if ttl > (64 - MaxSubnetHops) {
-		step = 64-ttl
+		step = 64 - ttl
 		return
 	}
 
 	// mostly used by Legacy windows variants
 	if ttl > (32 - MaxSubnetHops) {
-		step = 32-ttl
+		step = 32 - ttl
 		return
 	}
 
