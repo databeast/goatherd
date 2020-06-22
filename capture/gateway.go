@@ -2,7 +2,6 @@
 package capture
 
 import (
-	"fmt"
 	"github.com/databeast/goatherd/packets"
 	"github.com/pkg/errors"
 	"net"
@@ -49,9 +48,23 @@ func (g *Gateway) BaseBitMask() uint32 {
 	return 0
 }
 
+// how many leading bits are invariant?
+func (g *Gateway) FixedBits() (maskbits uint8) {
+	if g.bitmapping[0].value == VARIANT {
+		return 0 // no discernable fixed mask for this gateway
+	}
+	for i, b := range g.bitmapping {
+		if b.value == VARIANT {
+			return uint8(i-1) // everything up until this bit is fixed
+		}
+	}
+	return 32 // we've only ever seen a single address from this gateway
+}
+
+
 // process this packet summary, now we know its source host originated beyond this gateway
 func (g *Gateway) processPacket(summary packets.PacketSummary) (err error) {
-	fmt.Printf("Processing Packet on Gateway: %s\n", g.arpaddr.String())
+	logger.Printf("Processing Packet on Gateway: %s\n", g.arpaddr.String())
 	// sanity checks for developer oversight
 	if summary.SrcMac.String() != g.arpaddr.String() && summary.DstMac.String() != g.arpaddr.String() {
 		errors.Errorf("summary incorrectly passed to wrong gateway to process")
@@ -63,7 +76,7 @@ func (g *Gateway) processPacket(summary packets.PacketSummary) (err error) {
 	// from here on out, we're just going to work with the IP address in a bitwise fashion. convert it to bitmap\
 	bits, err := decomposeToBits(summary.SrcIP)
 	if err != nil {
-		fmt.Printf("%s\n", err.Error())
+		logger.Printf("%s\n", err.Error())
 		return err
 	}
 
@@ -104,30 +117,40 @@ func (g *Gateway) processPacket(summary packets.PacketSummary) (err error) {
 
 }
 
-// turn IP addresses into a bitmap style array of bools, its just easier to work with that way
-func decomposeToBits(addr net.IP) (bits [32]bool, err error) {
+// Re-examine our knowledge of IP/MAC mappings to see if we've identified a new gateway
+func (c *CapturePoint) recheckGateways() {
+	// TODO: Need a mutex strategy here
+	for mac, ipmap := range c.macmappings {
+		// if we already know this is a gateway, don't waste time rechecking it
 
-	//ipint := binary.BigEndian.Uint32(addr)
-	//NOTE: validate this goes bigendian in all archs
-	for i, x := range addr {
-		for j := 0; j < 8; j++ {
-			if (x<<uint(j))&0x80 == 0x80 {
-				bits[8*i+j] = true
+		if _, ok := c.subnetGateways[mac] ; ok {
+			continue
+		}
+
+		if _, ok := c.supernetGateways[mac] ; ok {
+			continue
+		}
+
+		if len(ipmap.List()) > 1 { // more than one address served from here, potential gateway
+
+			// TODO: are the addresses all on the local subnet? hosts with multiple interface IPs are not necessarily gateway
+
+			// ok, time to create a new gateway
+			ngip := net.ParseIP("")
+			ngmac, err := net.ParseMAC(string(mac))
+			if err != nil { //something bad has happened code-wise for things to be in this state
+
+			}
+
+			ng := NewGateway(ngip, ngmac)
+
+			//subnet or supernet gateway? For now we're doing this the stupid way first
+			//by assuming that the widest range of first-octect is upstream
+			if len(ipmap) > 10 {
+				c.supernetGateways[mac] = ng
+			} else {
+				c.subnetGateways[mac] = ng
 			}
 		}
 	}
-
-	return bits, err
-}
-
-// Re-examine our knowledge of IP/MAC mappings to see if we've identified a new gateway
-func (c *CapturePoint) recheckGateways() {
-	for mac, ipmap := range c.macmappings {
-		if len(ipmap.List()) > 1 { // more than one address served from here, potential gateway
-
-			// are the addresses all on the local subnet? hosts with multiple interface IPs are not necessarily gateway
-
-		}
-	}
-
 }
