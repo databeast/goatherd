@@ -3,7 +3,10 @@
 
 package capture
 
-import "net"
+import (
+	"math"
+	"net"
+)
 
 // TTL Tracking for each variable bit position
 // if a given bitposition remains Nil, it is assumed to be invariant
@@ -82,17 +85,18 @@ func (b *BitMap) BitsetByStep(ttlstep uint8) (addressbits []bitarray) {
 
 
 	// 2^variantbits = total number of address permutations
-	var permutations uint
+
+	var exponent uint
 	for _, b := range b {
 		if _, ok:= b.ttlcounts[ttlstep] ; ok {
 			if b.value == VARIANT {
-				permutations += 1
+				exponent += 1
 			}
 		}
 	}
 
-	if permutations > 0 {
-		addressbits = make([]bitarray, permutations)
+	if exponent > 0 {
+		addressbits = make([]bitarray, uint(math.Pow(float64(2), float64(exponent))))
 	} else {
 		addressbits = make([]bitarray, 1)
 	}
