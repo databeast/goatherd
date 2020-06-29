@@ -49,7 +49,7 @@ func (g *Gateway) BaseBitMask() uint32 {
 }
 
 // how many leading bits are invariant?
-func (g *Gateway) FixedBits() (maskbits uint8) {
+func (g *Gateway) MaskBits() (maskbits uint8) {
 	if g.bitmapping[0].value == VARIANT {
 		return 0 // no discernable fixed mask for this gateway
 	}
@@ -59,6 +59,11 @@ func (g *Gateway) FixedBits() (maskbits uint8) {
 		}
 	}
 	return 32 // we've only ever seen a single address from this gateway
+}
+
+// What are the leading invariant bits?
+func (g *Gateway) FixedBits() (maskbits uint8) {
+	return maskbits
 }
 
 
@@ -154,3 +159,11 @@ func (c *CapturePoint) recheckGateways() {
 		}
 	}
 }
+
+// pull subnet estimates just from this gateway
+func (g *Gateway) calculateSubnets() {
+	//for i, v := range g.bitmapping {
+	//
+	//}
+}
+
