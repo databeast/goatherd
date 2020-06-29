@@ -6,6 +6,7 @@ package capture
 import (
 	"math"
 	"net"
+	"sort"
 )
 
 // TTL Tracking for each variable bit position
@@ -75,18 +76,38 @@ func (b *BitMap) ValidNetworkAddrs() (addrs []net.IPAddr) {
 
 // list of all TTL Steppings seen in this bitmap
 func (b *BitMap) ObservedTTLsteps() (steps []uint8) {
+	uniquesteps := []int{}
+	for _,v := range b {
+		for s, _ := range v.ttlcounts {
+			var found = false
+			for _, c := range uniquesteps {
+				if c == int(s) {
+					found = true
+				}
+			}
+			if !found {
+				uniquesteps = append(uniquesteps, int(s))
+			}
+		}
+	}
 
+	//sorting them isn't strictly necessary, just convenient
+	sort.Ints(uniquesteps)
+	steps = make([]uint8, len(uniquesteps))
+	for i, s := range uniquesteps {
+		steps[i] = uint8(s)
+	}
 	return steps
+
 }
 
-// for a given TTL Step, extract out the bitmappings observed with that Step
+// for a given TTL Step, extract out all possible address bitmappings observed with that Step
+// this essentially reconstructs all possible IP addresses with the observed TTL step depth
 func (b *BitMap) BitsetByStep(ttlstep uint8) (addressbits []bitarray) {
-
-
 
 	// 2^variantbits = total number of address permutations
 
-	var exponent uint
+	var exponent uint = 0
 	for _, b := range b {
 		if _, ok:= b.ttlcounts[ttlstep] ; ok {
 			if b.value == VARIANT {
@@ -97,7 +118,7 @@ func (b *BitMap) BitsetByStep(ttlstep uint8) (addressbits []bitarray) {
 
 	if exponent > 0 {
 		addressbits = make([]bitarray, uint(math.Pow(float64(2), float64(exponent))))
-	} else {
+	} else { // no variant bits, only a single possible address
 		addressbits = make([]bitarray, 1)
 	}
 
