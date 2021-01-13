@@ -1,5 +1,3 @@
-package mapper
-
 // Create a Mapper
 // Load a Collector
 // Define a capturepoint for the collector
@@ -21,3 +19,4 @@ package mapper
 // but some of those unused addresses can be network or broadcast addresses
 // if we calculate that we see no traffic from a pairing of a valid network/broadcast address, we mark this mask/prefix
 // as a viable potential subnet
+package mapper
