@@ -1,0 +1,8 @@
+{
+	"folders": [
+		{
+			"uri": "vscode-remote://wsl+ubuntu-20.04/home/conrad/Code/goatherd"
+		}
+	],
+	"remoteAuthority": "wsl+Ubuntu-20.04"
+}
