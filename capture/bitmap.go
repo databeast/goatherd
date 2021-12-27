@@ -48,7 +48,6 @@ func (g *Gateway) trackBitTTL(position uint8, ttlstep uint8) {
 
 //
 
-
 // turn IP addresses into a bitmap style array of bools, its just easier to work with that way
 func decomposeToBits(addr net.IP) (bits [32]bool, err error) {
 
@@ -77,7 +76,7 @@ func (b *BitMap) ValidNetworkAddrs() (addrs []net.IPAddr) {
 // list of all TTL Steppings seen in this bitmap
 func (b *BitMap) ObservedTTLsteps() (steps []uint8) {
 	uniquesteps := []int{}
-	for _,v := range b {
+	for _, v := range b {
 		for s, _ := range v.ttlcounts {
 			var found = false
 			for _, c := range uniquesteps {
@@ -109,7 +108,7 @@ func (b *BitMap) BitsetByStep(ttlstep uint8) (addressbits []bitarray) {
 
 	var exponent uint = 0
 	for _, b := range b {
-		if _, ok:= b.ttlcounts[ttlstep] ; ok {
+		if _, ok := b.ttlcounts[ttlstep]; ok {
 			if b.value == VARIANT {
 				exponent += 1
 			}
@@ -126,7 +125,7 @@ func (b *BitMap) BitsetByStep(ttlstep uint8) (addressbits []bitarray) {
 
 	for i, b := range b {
 		// we know the total number of addresses, time to construct them bit by bit
-		switch b.value  {  //if variant, we need to record both
+		switch b.value { //if variant, we need to record both
 		case UNSET:
 			for bi := 0; bi < permcount; bi++ {
 				addressbits[i][bi] = false
@@ -140,7 +139,7 @@ func (b *BitMap) BitsetByStep(ttlstep uint8) (addressbits []bitarray) {
 			for bi := 0; bi < permcount/2; bi++ {
 				addressbits[i][bi] = true
 			}
-			for bi := permcount/2; bi < permcount; bi++ {
+			for bi := permcount / 2; bi < permcount; bi++ {
 				addressbits[i][bi] = false
 			}
 		default:
@@ -149,9 +148,3 @@ func (b *BitMap) BitsetByStep(ttlstep uint8) (addressbits []bitarray) {
 	}
 	return addressbits
 }
-
-
-
-
-
-

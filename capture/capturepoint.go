@@ -26,7 +26,7 @@ func (m ipmap) List() (addrs []string) {
 	for quad1, next1 := range m {
 		for quad2, next2 := range next1 {
 			for quad3, quad4 := range next2 {
-				addrstring = fmt.Sprintf("%d.%d.%d.%d", quad1,quad2,quad3,quad4)
+				addrstring = fmt.Sprintf("%d.%d.%d.%d", quad1, quad2, quad3, quad4)
 				addrs = append(addrs, addrstring)
 			}
 		}
@@ -103,8 +103,6 @@ func (c *CapturePoint) ProcessPacketSummary(summary packets.PacketSummary) (err 
 
 	}
 
-
-
 	srcgateway.BaseBitMask()
 	dstgateway.BaseBitMask()
 
@@ -154,7 +152,7 @@ func (c *CapturePoint) trackAddrToMac(addr net.IP, mac net.HardwareAddr) {
 	}
 	c.mapmu.Unlock()
 
-	c.recheckGateways()  // see if our updated knowledge identities new gateways
+	c.recheckGateways() // see if our updated knowledge identities new gateways
 
 }
 

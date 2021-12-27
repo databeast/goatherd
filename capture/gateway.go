@@ -55,7 +55,7 @@ func (g *Gateway) MaskBits() (maskbits uint8) {
 	}
 	for i, b := range g.bitmapping {
 		if b.value == VARIANT {
-			return uint8(i-1) // everything up until this bit is fixed
+			return uint8(i - 1) // everything up until this bit is fixed
 		}
 	}
 	return 32 // we've only ever seen a single address from this gateway
@@ -65,7 +65,6 @@ func (g *Gateway) MaskBits() (maskbits uint8) {
 func (g *Gateway) FixedBits() (maskbits uint8) {
 	return maskbits
 }
-
 
 // process this packet summary, now we know its source host originated beyond this gateway
 func (g *Gateway) processPacket(summary packets.PacketSummary) (err error) {
@@ -128,11 +127,11 @@ func (c *CapturePoint) recheckGateways() {
 	for mac, ipmap := range c.macmappings {
 		// if we already know this is a gateway, don't waste time rechecking it
 
-		if _, ok := c.subnetGateways[mac] ; ok {
+		if _, ok := c.subnetGateways[mac]; ok {
 			continue
 		}
 
-		if _, ok := c.supernetGateways[mac] ; ok {
+		if _, ok := c.supernetGateways[mac]; ok {
 			continue
 		}
 
@@ -166,4 +165,3 @@ func (g *Gateway) calculateSubnets() {
 	//
 	//}
 }
-
