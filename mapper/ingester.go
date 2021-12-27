@@ -19,14 +19,10 @@ var ingestBufferSize = 10000
 
 // Incoming Packet Summary Routing and Channels
 type ingester struct {
+	packets.UnimplementedPacketCollectionServer
 	grpcsrv       *grpc.Server
 	incoming      chan packets.PacketSummary
 	capturepoints map[captureid]*capture.CapturePoint // packet capture source tracking for collectors
-}
-
-func (i *ingester) mustEmbedUnimplementedPacketCollectionServer() {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (i *ingester) Ingest(server packets.PacketCollection_IngestServer) error {

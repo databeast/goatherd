@@ -51,15 +51,10 @@ func initConfig() {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		// TODO: Find home directory.
 
 		// Search config in home directory with name ".goatherd" (without extension).
-		viper.AddConfigPath(home)
+		viper.AddConfigPath("~")
 		viper.SetConfigName(".goatherd")
 	}
 
