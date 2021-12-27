@@ -10,10 +10,22 @@ import (
 	"net"
 )
 
+// Collector defines any packet capture collector
 type Collector interface {
 	Start() error
 	Stop() error
 	Packets() <-chan packets.PacketSummary
+}
+
+// RemoteCollector is a collector attached to a remote Mapper
+type RemoteCollector interface {
+	Collector
+	Connect(remote net.IPAddr)
+}
+
+// LocalConnector is a collector running directly under a Mapper
+type LocalCollector interface {
+	Collector
 }
 
 // Base Packet Collector
