@@ -1,13 +1,10 @@
 syntax = "proto3";
-import "google.golang.org/protobuf";
-package packets;
-
-
+option go_package = "github.com/databeast/goatherd/packets";
 // Distributed Collector Aggregation Service
 
 service PacketCollection {
   // packetsummary ingest stream
-  rpc Ingest (stream PacketSummaryMessage) returns (google.protobuf.Empty) {}
+  rpc Ingest (stream PacketSummaryMessage) returns (RegisterResponse) {}
 
   // Register a CapturePoint
   rpc CapturePoint (RegisterCapturePoint) returns (RegisterResponse) {}

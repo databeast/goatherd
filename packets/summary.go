@@ -2,6 +2,7 @@ package packets
 
 import (
 	"github.com/pkg/errors"
+	"github.com/vmihailenco/msgpack/v5"
 	"net"
 )
 

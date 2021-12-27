@@ -24,6 +24,11 @@ type ingester struct {
 	capturepoints map[captureid]*capture.CapturePoint // packet capture source tracking for collectors
 }
 
+func (i *ingester) mustEmbedUnimplementedPacketCollectionServer() {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (i *ingester) Ingest(server packets.PacketCollection_IngestServer) error {
 	for {
 		p, err := server.Recv()
