@@ -1,12 +1,12 @@
 goatherd
 goatherd.exe
+/build/
 .vs/**
 .vscode/**
 __debug_bin
 .idea/**
 sample.pcap
 *.code-workspace
-
 
 
 

@@ -139,6 +139,7 @@ type IPv4 struct {
 	SourceIp       []byte                 `protobuf:"bytes,2,opt,name=source_ip,json=sourceIp,proto3" json:"source_ip,omitempty"`
 	DestinationIp  []byte                 `protobuf:"bytes,3,opt,name=destination_ip,json=destinationIp,proto3" json:"destination_ip,omitempty"`
 	Ttl            uint32                 `protobuf:"varint,4,opt,name=ttl,proto3" json:"ttl,omitempty"`
+	SourceMac      []byte                 `protobuf:"bytes,5,opt,name=source_mac,json=sourceMac,proto3" json:"source_mac,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -201,6 +202,137 @@ func (x *IPv4) GetTtl() uint32 {
 	return 0
 }
 
+func (x *IPv4) GetSourceMac() []byte {
+	if x != nil {
+		return x.SourceMac
+	}
+	return nil
+}
+
+type InventoryRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InventoryRequest) Reset() {
+	*x = InventoryRequest{}
+	mi := &file_internal_coordination_coordination_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InventoryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InventoryRequest) ProtoMessage() {}
+
+func (x *InventoryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_coordination_coordination_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InventoryRequest.ProtoReflect.Descriptor instead.
+func (*InventoryRequest) Descriptor() ([]byte, []int) {
+	return file_internal_coordination_coordination_proto_rawDescGZIP(), []int{3}
+}
+
+type InventoryChunk struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Data          []byte                 `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InventoryChunk) Reset() {
+	*x = InventoryChunk{}
+	mi := &file_internal_coordination_coordination_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InventoryChunk) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InventoryChunk) ProtoMessage() {}
+
+func (x *InventoryChunk) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_coordination_coordination_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InventoryChunk.ProtoReflect.Descriptor instead.
+func (*InventoryChunk) Descriptor() ([]byte, []int) {
+	return file_internal_coordination_coordination_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *InventoryChunk) GetData() []byte {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
+type ReportsChunk struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Data          []byte                 `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReportsChunk) Reset() {
+	*x = ReportsChunk{}
+	mi := &file_internal_coordination_coordination_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReportsChunk) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReportsChunk) ProtoMessage() {}
+
+func (x *ReportsChunk) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_coordination_coordination_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReportsChunk.ProtoReflect.Descriptor instead.
+func (*ReportsChunk) Descriptor() ([]byte, []int) {
+	return file_internal_coordination_coordination_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ReportsChunk) GetData() []byte {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
 type Observation struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Types that are valid to be assigned to Data:
@@ -208,6 +340,7 @@ type Observation struct {
 	//	*Observation_Registration
 	//	*Observation_Arp
 	//	*Observation_Ipv4
+	//	*Observation_QualityJson
 	Data          isObservation_Data `protobuf_oneof:"data"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -215,7 +348,7 @@ type Observation struct {
 
 func (x *Observation) Reset() {
 	*x = Observation{}
-	mi := &file_internal_coordination_coordination_proto_msgTypes[3]
+	mi := &file_internal_coordination_coordination_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -227,7 +360,7 @@ func (x *Observation) String() string {
 func (*Observation) ProtoMessage() {}
 
 func (x *Observation) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_coordination_coordination_proto_msgTypes[3]
+	mi := &file_internal_coordination_coordination_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -240,7 +373,7 @@ func (x *Observation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Observation.ProtoReflect.Descriptor instead.
 func (*Observation) Descriptor() ([]byte, []int) {
-	return file_internal_coordination_coordination_proto_rawDescGZIP(), []int{3}
+	return file_internal_coordination_coordination_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *Observation) GetData() isObservation_Data {
@@ -277,6 +410,15 @@ func (x *Observation) GetIpv4() *IPv4 {
 	return nil
 }
 
+func (x *Observation) GetQualityJson() []byte {
+	if x != nil {
+		if x, ok := x.Data.(*Observation_QualityJson); ok {
+			return x.QualityJson
+		}
+	}
+	return nil
+}
+
 type isObservation_Data interface {
 	isObservation_Data()
 }
@@ -293,11 +435,17 @@ type Observation_Ipv4 struct {
 	Ipv4 *IPv4 `protobuf:"bytes,3,opt,name=ipv4,proto3,oneof"`
 }
 
+type Observation_QualityJson struct {
+	QualityJson []byte `protobuf:"bytes,4,opt,name=quality_json,json=qualityJson,proto3,oneof"`
+}
+
 func (*Observation_Registration) isObservation_Data() {}
 
 func (*Observation_Arp) isObservation_Data() {}
 
 func (*Observation_Ipv4) isObservation_Data() {}
+
+func (*Observation_QualityJson) isObservation_Data() {}
 
 type CollectResult struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -308,7 +456,7 @@ type CollectResult struct {
 
 func (x *CollectResult) Reset() {
 	*x = CollectResult{}
-	mi := &file_internal_coordination_coordination_proto_msgTypes[4]
+	mi := &file_internal_coordination_coordination_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -320,7 +468,7 @@ func (x *CollectResult) String() string {
 func (*CollectResult) ProtoMessage() {}
 
 func (x *CollectResult) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_coordination_coordination_proto_msgTypes[4]
+	mi := &file_internal_coordination_coordination_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -333,7 +481,7 @@ func (x *CollectResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CollectResult.ProtoReflect.Descriptor instead.
 func (*CollectResult) Descriptor() ([]byte, []int) {
-	return file_internal_coordination_coordination_proto_rawDescGZIP(), []int{4}
+	return file_internal_coordination_coordination_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *CollectResult) GetObservations() uint64 {
@@ -345,13 +493,14 @@ func (x *CollectResult) GetObservations() uint64 {
 
 type ReportsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Evidence      bool                   `protobuf:"varint,1,opt,name=evidence,proto3" json:"evidence,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ReportsRequest) Reset() {
 	*x = ReportsRequest{}
-	mi := &file_internal_coordination_coordination_proto_msgTypes[5]
+	mi := &file_internal_coordination_coordination_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -363,7 +512,7 @@ func (x *ReportsRequest) String() string {
 func (*ReportsRequest) ProtoMessage() {}
 
 func (x *ReportsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_coordination_coordination_proto_msgTypes[5]
+	mi := &file_internal_coordination_coordination_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -376,111 +525,14 @@ func (x *ReportsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportsRequest.ProtoReflect.Descriptor instead.
 func (*ReportsRequest) Descriptor() ([]byte, []int) {
-	return file_internal_coordination_coordination_proto_rawDescGZIP(), []int{5}
+	return file_internal_coordination_coordination_proto_rawDescGZIP(), []int{8}
 }
 
-type CaptureReport struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	CapturePoint  string                 `protobuf:"bytes,1,opt,name=capture_point,json=capturePoint,proto3" json:"capture_point,omitempty"`
-	ReportJson    []byte                 `protobuf:"bytes,2,opt,name=report_json,json=reportJson,proto3" json:"report_json,omitempty"`
-	Error         string                 `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CaptureReport) Reset() {
-	*x = CaptureReport{}
-	mi := &file_internal_coordination_coordination_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CaptureReport) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CaptureReport) ProtoMessage() {}
-
-func (x *CaptureReport) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_coordination_coordination_proto_msgTypes[6]
+func (x *ReportsRequest) GetEvidence() bool {
 	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
+		return x.Evidence
 	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CaptureReport.ProtoReflect.Descriptor instead.
-func (*CaptureReport) Descriptor() ([]byte, []int) {
-	return file_internal_coordination_coordination_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *CaptureReport) GetCapturePoint() string {
-	if x != nil {
-		return x.CapturePoint
-	}
-	return ""
-}
-
-func (x *CaptureReport) GetReportJson() []byte {
-	if x != nil {
-		return x.ReportJson
-	}
-	return nil
-}
-
-func (x *CaptureReport) GetError() string {
-	if x != nil {
-		return x.Error
-	}
-	return ""
-}
-
-type ReportsResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Reports       []*CaptureReport       `protobuf:"bytes,1,rep,name=reports,proto3" json:"reports,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ReportsResponse) Reset() {
-	*x = ReportsResponse{}
-	mi := &file_internal_coordination_coordination_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ReportsResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ReportsResponse) ProtoMessage() {}
-
-func (x *ReportsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_coordination_coordination_proto_msgTypes[7]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ReportsResponse.ProtoReflect.Descriptor instead.
-func (*ReportsResponse) Descriptor() ([]byte, []int) {
-	return file_internal_coordination_coordination_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *ReportsResponse) GetReports() []*CaptureReport {
-	if x != nil {
-		return x.Reports
-	}
-	return nil
+	return false
 }
 
 var File_internal_coordination_coordination_proto protoreflect.FileDescriptor
@@ -494,30 +546,33 @@ const file_internal_coordination_coordination_proto_rawDesc = "" +
 	"\fupstream_mac\x18\x03 \x01(\fR\vupstreamMac\"'\n" +
 	"\x03ARP\x12\x10\n" +
 	"\x03mac\x18\x01 \x01(\fR\x03mac\x12\x0e\n" +
-	"\x02ip\x18\x02 \x01(\fR\x02ip\"\x85\x01\n" +
+	"\x02ip\x18\x02 \x01(\fR\x02ip\"\xa4\x01\n" +
 	"\x04IPv4\x12'\n" +
 	"\x0fdestination_mac\x18\x01 \x01(\fR\x0edestinationMac\x12\x1b\n" +
 	"\tsource_ip\x18\x02 \x01(\fR\bsourceIp\x12%\n" +
 	"\x0edestination_ip\x18\x03 \x01(\fR\rdestinationIp\x12\x10\n" +
-	"\x03ttl\x18\x04 \x01(\rR\x03ttl\"\xcc\x01\n" +
+	"\x03ttl\x18\x04 \x01(\rR\x03ttl\x12\x1d\n" +
+	"\n" +
+	"source_mac\x18\x05 \x01(\fR\tsourceMac\"\x12\n" +
+	"\x10InventoryRequest\"$\n" +
+	"\x0eInventoryChunk\x12\x12\n" +
+	"\x04data\x18\x01 \x01(\fR\x04data\"\"\n" +
+	"\fReportsChunk\x12\x12\n" +
+	"\x04data\x18\x01 \x01(\fR\x04data\"\xf1\x01\n" +
 	"\vObservation\x12L\n" +
 	"\fregistration\x18\x01 \x01(\v2&.goatherd.coordination.v1.RegistrationH\x00R\fregistration\x121\n" +
 	"\x03arp\x18\x02 \x01(\v2\x1d.goatherd.coordination.v1.ARPH\x00R\x03arp\x124\n" +
-	"\x04ipv4\x18\x03 \x01(\v2\x1e.goatherd.coordination.v1.IPv4H\x00R\x04ipv4B\x06\n" +
+	"\x04ipv4\x18\x03 \x01(\v2\x1e.goatherd.coordination.v1.IPv4H\x00R\x04ipv4\x12#\n" +
+	"\fquality_json\x18\x04 \x01(\fH\x00R\vqualityJsonB\x06\n" +
 	"\x04data\"3\n" +
 	"\rCollectResult\x12\"\n" +
-	"\fobservations\x18\x01 \x01(\x04R\fobservations\"\x10\n" +
-	"\x0eReportsRequest\"k\n" +
-	"\rCaptureReport\x12#\n" +
-	"\rcapture_point\x18\x01 \x01(\tR\fcapturePoint\x12\x1f\n" +
-	"\vreport_json\x18\x02 \x01(\fR\n" +
-	"reportJson\x12\x14\n" +
-	"\x05error\x18\x03 \x01(\tR\x05error\"T\n" +
-	"\x0fReportsResponse\x12A\n" +
-	"\areports\x18\x01 \x03(\v2'.goatherd.coordination.v1.CaptureReportR\areports2\xca\x01\n" +
+	"\fobservations\x18\x01 \x01(\x04R\fobservations\",\n" +
+	"\x0eReportsRequest\x12\x1a\n" +
+	"\bevidence\x18\x01 \x01(\bR\bevidence2\xb4\x02\n" +
 	"\vCoordinator\x12[\n" +
-	"\aCollect\x12%.goatherd.coordination.v1.Observation\x1a'.goatherd.coordination.v1.CollectResult(\x01\x12^\n" +
-	"\aReports\x12(.goatherd.coordination.v1.ReportsRequest\x1a).goatherd.coordination.v1.ReportsResponseB5Z3github.com/databeast/goatherd/internal/coordinationb\x06proto3"
+	"\aCollect\x12%.goatherd.coordination.v1.Observation\x1a'.goatherd.coordination.v1.CollectResult(\x01\x12c\n" +
+	"\tInventory\x12*.goatherd.coordination.v1.InventoryRequest\x1a(.goatherd.coordination.v1.InventoryChunk0\x01\x12c\n" +
+	"\rStreamReports\x12(.goatherd.coordination.v1.ReportsRequest\x1a&.goatherd.coordination.v1.ReportsChunk0\x01B5Z3github.com/databeast/goatherd/internal/coordinationb\x06proto3"
 
 var (
 	file_internal_coordination_coordination_proto_rawDescOnce sync.Once
@@ -531,31 +586,33 @@ func file_internal_coordination_coordination_proto_rawDescGZIP() []byte {
 	return file_internal_coordination_coordination_proto_rawDescData
 }
 
-var file_internal_coordination_coordination_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_internal_coordination_coordination_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_internal_coordination_coordination_proto_goTypes = []any{
-	(*Registration)(nil),    // 0: goatherd.coordination.v1.Registration
-	(*ARP)(nil),             // 1: goatherd.coordination.v1.ARP
-	(*IPv4)(nil),            // 2: goatherd.coordination.v1.IPv4
-	(*Observation)(nil),     // 3: goatherd.coordination.v1.Observation
-	(*CollectResult)(nil),   // 4: goatherd.coordination.v1.CollectResult
-	(*ReportsRequest)(nil),  // 5: goatherd.coordination.v1.ReportsRequest
-	(*CaptureReport)(nil),   // 6: goatherd.coordination.v1.CaptureReport
-	(*ReportsResponse)(nil), // 7: goatherd.coordination.v1.ReportsResponse
+	(*Registration)(nil),     // 0: goatherd.coordination.v1.Registration
+	(*ARP)(nil),              // 1: goatherd.coordination.v1.ARP
+	(*IPv4)(nil),             // 2: goatherd.coordination.v1.IPv4
+	(*InventoryRequest)(nil), // 3: goatherd.coordination.v1.InventoryRequest
+	(*InventoryChunk)(nil),   // 4: goatherd.coordination.v1.InventoryChunk
+	(*ReportsChunk)(nil),     // 5: goatherd.coordination.v1.ReportsChunk
+	(*Observation)(nil),      // 6: goatherd.coordination.v1.Observation
+	(*CollectResult)(nil),    // 7: goatherd.coordination.v1.CollectResult
+	(*ReportsRequest)(nil),   // 8: goatherd.coordination.v1.ReportsRequest
 }
 var file_internal_coordination_coordination_proto_depIdxs = []int32{
 	0, // 0: goatherd.coordination.v1.Observation.registration:type_name -> goatherd.coordination.v1.Registration
 	1, // 1: goatherd.coordination.v1.Observation.arp:type_name -> goatherd.coordination.v1.ARP
 	2, // 2: goatherd.coordination.v1.Observation.ipv4:type_name -> goatherd.coordination.v1.IPv4
-	6, // 3: goatherd.coordination.v1.ReportsResponse.reports:type_name -> goatherd.coordination.v1.CaptureReport
-	3, // 4: goatherd.coordination.v1.Coordinator.Collect:input_type -> goatherd.coordination.v1.Observation
-	5, // 5: goatherd.coordination.v1.Coordinator.Reports:input_type -> goatherd.coordination.v1.ReportsRequest
-	4, // 6: goatherd.coordination.v1.Coordinator.Collect:output_type -> goatherd.coordination.v1.CollectResult
-	7, // 7: goatherd.coordination.v1.Coordinator.Reports:output_type -> goatherd.coordination.v1.ReportsResponse
-	6, // [6:8] is the sub-list for method output_type
-	4, // [4:6] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	6, // 3: goatherd.coordination.v1.Coordinator.Collect:input_type -> goatherd.coordination.v1.Observation
+	3, // 4: goatherd.coordination.v1.Coordinator.Inventory:input_type -> goatherd.coordination.v1.InventoryRequest
+	8, // 5: goatherd.coordination.v1.Coordinator.StreamReports:input_type -> goatherd.coordination.v1.ReportsRequest
+	7, // 6: goatherd.coordination.v1.Coordinator.Collect:output_type -> goatherd.coordination.v1.CollectResult
+	4, // 7: goatherd.coordination.v1.Coordinator.Inventory:output_type -> goatherd.coordination.v1.InventoryChunk
+	5, // 8: goatherd.coordination.v1.Coordinator.StreamReports:output_type -> goatherd.coordination.v1.ReportsChunk
+	6, // [6:9] is the sub-list for method output_type
+	3, // [3:6] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_internal_coordination_coordination_proto_init() }
@@ -563,10 +620,11 @@ func file_internal_coordination_coordination_proto_init() {
 	if File_internal_coordination_coordination_proto != nil {
 		return
 	}
-	file_internal_coordination_coordination_proto_msgTypes[3].OneofWrappers = []any{
+	file_internal_coordination_coordination_proto_msgTypes[6].OneofWrappers = []any{
 		(*Observation_Registration)(nil),
 		(*Observation_Arp)(nil),
 		(*Observation_Ipv4)(nil),
+		(*Observation_QualityJson)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -574,7 +632,7 @@ func file_internal_coordination_coordination_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_internal_coordination_coordination_proto_rawDesc), len(file_internal_coordination_coordination_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

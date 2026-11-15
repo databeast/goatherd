@@ -100,3 +100,58 @@ func TestWriteJSONLDPropagatesWriteError(t *testing.T) {
 		t.Fatalf("got %v, want write error", err)
 	}
 }
+
+func TestWriteJSONLDPreservesNilAndEmptyCollections(t *testing.T) {
+	for _, tt := range []struct {
+		name       string
+		report     discovery.Report
+		candidates string
+		layers     string
+		ttl        string
+	}{
+		{
+			name: "nil",
+			report: discovery.Report{Overall: discovery.Layer{
+				Bits: []discovery.Bit{{Position: 0}},
+			}},
+			candidates: "null", layers: "null", ttl: "null",
+		},
+		{
+			name: "empty",
+			report: discovery.Report{
+				Candidates: []discovery.Candidate{},
+				Layers:     []discovery.Layer{},
+				Overall: discovery.Layer{
+					Bits: []discovery.Bit{{Position: 0, TTL: []discovery.TTLCount{}}},
+				},
+			},
+			candidates: "[]", layers: "[]", ttl: "[]",
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			var output bytes.Buffer
+			if err := WriteJSONLD(&output, tt.report); err != nil {
+				t.Fatal(err)
+			}
+			var decoded struct {
+				Candidates json.RawMessage `json:"upstream_candidates"`
+				Layers     json.RawMessage `json:"hop_layers"`
+				Overall    struct {
+					Bits []struct {
+						TTL json.RawMessage `json:"ttl_counts"`
+					} `json:"bits"`
+				} `json:"overall"`
+			}
+			if err := json.Unmarshal(output.Bytes(), &decoded); err != nil {
+				t.Fatal(err)
+			}
+			if len(decoded.Overall.Bits) != 1 {
+				t.Fatalf("unexpected bits: %+v", decoded.Overall.Bits)
+			}
+			if string(decoded.Candidates) != tt.candidates || string(decoded.Layers) != tt.layers ||
+				string(decoded.Overall.Bits[0].TTL) != tt.ttl {
+				t.Fatalf("got candidates=%s layers=%s ttl=%s", decoded.Candidates, decoded.Layers, decoded.Overall.Bits[0].TTL)
+			}
+		})
+	}
+}

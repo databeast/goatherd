@@ -163,7 +163,7 @@ func TestMutualTLSStreamingAndReports(t *testing.T) {
 			t.Fatalf("stream result: %v, %v", result, err)
 		}
 	}
-	reports, err := client.Reports(ctx, &coordination.ReportsRequest{})
+	reports, err := readReports(ctx, client)
 	if err != nil || len(reports.Reports) != 2 {
 		t.Fatalf("reports: %v, %v", reports, err)
 	}
@@ -205,13 +205,13 @@ func TestMutualTLSStreamingAndReports(t *testing.T) {
 	if _, err := invalid.CloseAndRecv(); status.Code(err) != codes.InvalidArgument {
 		t.Fatalf("expected malformed observation rejection, got %v", err)
 	}
-	reports, err = client.Reports(ctx, &coordination.ReportsRequest{})
+	reports, err = readReports(ctx, client)
 	if err != nil || len(reports.Reports) != 3 || reports.Reports[0].Error == "" {
 		t.Fatalf("expected explicit incomplete capture error: %v, %v", reports, err)
 	}
 	unauthenticated := clientTLS.Clone()
 	unauthenticated.Certificates = nil
-	if _, err := coordination.NewCoordinatorClient(dial(unauthenticated)).Reports(ctx, &coordination.ReportsRequest{}); err == nil {
+	if _, err := readReports(ctx, coordination.NewCoordinatorClient(dial(unauthenticated))); err == nil {
 		t.Fatal("unauthenticated client accepted")
 	}
 }

@@ -1,4 +1,6 @@
 .github
 README.md
-
+build
+src/goatherd
+src/goatherd.exe
 

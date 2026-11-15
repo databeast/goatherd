@@ -59,9 +59,30 @@ func (p *LocalCapturePoint) ObserveIPv4(dstMAC net.HardwareAddr, srcIP, dstIP ne
 	p.analyzer.ObserveIPv4(dstMAC, srcIP, dstIP, ttl)
 }
 
+func (p *LocalCapturePoint) ObserveIPv4Ethernet(srcMAC, dstMAC net.HardwareAddr, srcIP, dstIP net.IP, ttl uint8) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.analyzer.ObserveIPv4Ethernet(srcMAC, dstMAC, srcIP, dstIP, ttl)
+}
+
 // Report returns a snapshot of this capture point's evidence.
 func (p *LocalCapturePoint) Report(upstream net.HardwareAddr) (discovery.Report, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	return p.analyzer.Report(upstream)
+}
+
+// ReportWithEvidence takes both snapshots while holding the same lock.
+func (p *LocalCapturePoint) ReportWithEvidence(upstream net.HardwareAddr) (discovery.Report, discovery.Evidence, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	report, err := p.analyzer.Report(upstream)
+	selected := ""
+	if len(upstream) != 0 {
+		selected = upstream.String()
+	}
+	if err == nil {
+		selected = report.UpstreamMAC
+	}
+	return report, p.analyzer.Evidence(selected), err
 }

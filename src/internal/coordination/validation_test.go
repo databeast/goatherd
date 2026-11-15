@@ -1,7 +1,6 @@
 package coordination
 
 import (
-	"context"
 	"errors"
 	"io"
 	"math"
@@ -93,6 +92,7 @@ func TestCollectValidationAndErrors(t *testing.T) {
 		{"ipv4-source", []*Observation{registered(), {Data: &Observation_Ipv4{Ipv4: &IPv4{DestinationMac: make([]byte, 6), DestinationIp: make([]byte, 4)}}}}, codes.InvalidArgument},
 		{"ipv4-destination", []*Observation{registered(), {Data: &Observation_Ipv4{Ipv4: &IPv4{DestinationMac: make([]byte, 6), SourceIp: make([]byte, 4)}}}}, codes.InvalidArgument},
 		{"ipv4-ttl", []*Observation{registered(), {Data: &Observation_Ipv4{Ipv4: &IPv4{DestinationMac: make([]byte, 6), SourceIp: make([]byte, 4), DestinationIp: make([]byte, 4), Ttl: 256}}}}, codes.InvalidArgument},
+		{"ipv4-source-mac", []*Observation{registered(), {Data: &Observation_Ipv4{Ipv4: &IPv4{SourceMac: []byte{2}, DestinationMac: make([]byte, 6), SourceIp: make([]byte, 4), DestinationIp: make([]byte, 4)}}}}, codes.InvalidArgument},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			err := NewServer().Collect(&testServerStream{messages: tt.messages})
@@ -121,7 +121,7 @@ func TestReportsSortedAndUnavailable(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	result, err := s.Reports(context.Background(), &ReportsRequest{})
+	result, err := s.snapshot(false, false)
 	if err != nil || len(result.Reports) != 2 || result.Reports[0].CapturePoint != "a" ||
 		result.Reports[1].CapturePoint != "z" || result.Reports[0].Error == "" || len(result.Reports[0].ReportJson) != 0 {
 		t.Fatalf("unexpected reports: %+v, %v", result, err)

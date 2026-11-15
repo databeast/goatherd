@@ -6,7 +6,8 @@ option go_package = "github.com/databeast/goatherd/internal/coordination";
 
 service Coordinator {
   rpc Collect(stream Observation) returns (CollectResult);
-  rpc Reports(ReportsRequest) returns (ReportsResponse);
+  rpc Inventory(InventoryRequest) returns (stream InventoryChunk);
+  rpc StreamReports(ReportsRequest) returns (stream ReportsChunk);
 }
 
 message Registration {
@@ -25,6 +26,15 @@ message IPv4 {
   bytes source_ip = 2;
   bytes destination_ip = 3;
   uint32 ttl = 4;
+  bytes source_mac = 5;
+}
+
+message InventoryRequest {}
+message InventoryChunk {
+  bytes data = 1;
+}
+message ReportsChunk {
+  bytes data = 1;
 }
 
 message Observation {
@@ -32,6 +42,7 @@ message Observation {
     Registration registration = 1;
     ARP arp = 2;
     IPv4 ipv4 = 3;
+    bytes quality_json = 4;
   }
 }
 
@@ -39,14 +50,6 @@ message CollectResult {
   uint64 observations = 1;
 }
 
-message ReportsRequest {}
-
-message CaptureReport {
-  string capture_point = 1;
-  bytes report_json = 2;
-  string error = 3;
-}
-
-message ReportsResponse {
-  repeated CaptureReport reports = 1;
+message ReportsRequest {
+  bool evidence = 1;
 }

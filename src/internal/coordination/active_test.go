@@ -43,7 +43,7 @@ func TestReportsWhileCollectorIsStreaming(t *testing.T) {
 	}
 	sink.ObserveIPv4(gateway, net.IPv4(10, 0, 0, 1), net.IPv4(203, 0, 113, 1), 61)
 	for {
-		result, err := client.Reports(ctx, &coordination.ReportsRequest{})
+		result, err := readReports(ctx, client)
 		if err != nil {
 			t.Fatal(err)
 		}

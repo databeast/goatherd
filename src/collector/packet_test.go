@@ -21,6 +21,18 @@ type recordingSink struct {
 	err error
 }
 
+type ethernetRecordingSink struct {
+	recordingSink
+	source net.HardwareAddr
+	dest   net.HardwareAddr
+}
+
+func (s *ethernetRecordingSink) ObserveIPv4Ethernet(src, dst net.HardwareAddr, _, _ net.IP, _ uint8) {
+	s.source = append(net.HardwareAddr(nil), src...)
+	s.dest = append(net.HardwareAddr(nil), dst...)
+	s.ip++
+}
+
 func (s *recordingSink) ObserveARP(net.HardwareAddr, net.IP)                 { s.arp++ }
 func (s *recordingSink) ObserveIPv4(net.HardwareAddr, net.IP, net.IP, uint8) { s.ip++ }
 func (s *recordingSink) Err() error                                          { return s.err }
@@ -31,7 +43,20 @@ func makePacket(t *testing.T, data ...gopacket.SerializableLayer) gopacket.Packe
 	if err := gopacket.SerializeLayers(buffer, gopacket.SerializeOptions{FixLengths: true}, data...); err != nil {
 		t.Fatal(err)
 	}
+
 	return gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
+}
+
+func TestObservePacketPreservesEthernetSource(t *testing.T) {
+	src := net.HardwareAddr{2, 1, 2, 3, 4, 5}
+	dst := net.HardwareAddr{2, 6, 7, 8, 9, 10}
+	packet := makePacket(t, &layers.Ethernet{SrcMAC: src, DstMAC: dst, EthernetType: layers.EthernetTypeIPv4},
+		&layers.IPv4{Version: 4, TTL: 63, SrcIP: net.IPv4(10, 0, 0, 1), DstIP: net.IPv4(8, 8, 8, 8)})
+	sink := &ethernetRecordingSink{}
+	observePacket(sink, packet)
+	if sink.ip != 1 || sink.source.String() != src.String() || sink.dest.String() != dst.String() {
+		t.Fatalf("wrong Ethernet evidence: %+v", sink)
+	}
 }
 
 func TestObservePacketValidatesARPSource(t *testing.T) {

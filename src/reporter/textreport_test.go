@@ -62,6 +62,9 @@ func TestWriteTextNoARPAndWriteError(t *testing.T) {
 	if !strings.Contains(out.String(), "ARP addresses: none observed") {
 		t.Fatal("missing no ARP indicator")
 	}
+	if strings.Contains(out.String(), "Upstream candidates (forwarded packets):") {
+		t.Fatal("candidate heading displayed without candidates")
+	}
 	if err := WriteText(failingWriter{}, discovery.Report{}); !errors.Is(err, errWrite) {
 		t.Fatalf("got %v, want write error", err)
 	}

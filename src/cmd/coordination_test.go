@@ -51,10 +51,22 @@ func TestCoordinatorCommandRequiredFlags(t *testing.T) {
 	if _, err := connectCoordinator(command); err == nil || !strings.Contains(err.Error(), "--coordinator") {
 		t.Fatalf("missing coordinator: %v", err)
 	}
+
 	if err := command.Flags().Set("coordinator", "localhost:8432"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := connectCoordinator(command); err == nil || !strings.Contains(err.Error(), "--tls-cert") {
 		t.Fatalf("missing TLS: %v", err)
+	}
+}
+
+func TestTLSFlagsRequireCompleteOverride(t *testing.T) {
+	command := &cobra.Command{}
+	tlsFlags(command)
+	if err := command.Flags().Set("tls-cert", "certificate.pem"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tlsOptions(command, false); err == nil || !strings.Contains(err.Error(), "must be supplied together") {
+		t.Fatalf("partial override: %v", err)
 	}
 }

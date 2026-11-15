@@ -7,6 +7,7 @@ import (
 	"net"
 	"sort"
 
+	"github.com/databeast/goatherd/internal/quality"
 	"github.com/databeast/goatherd/internal/subnets"
 )
 
@@ -15,6 +16,7 @@ type observation struct {
 	source uint32
 	dest   uint32
 	ttl    uint8
+	srcMAC string
 }
 
 // Analyzer retains aggregated observations so late ARP evidence can change
@@ -60,12 +62,21 @@ func (a *Analyzer) ObserveARP(mac net.HardwareAddr, ip net.IP) {
 
 // ObserveIPv4 records traffic addressed to a unicast Ethernet destination.
 func (a *Analyzer) ObserveIPv4(dstMAC net.HardwareAddr, srcIP, dstIP net.IP, ttl uint8) {
+	a.ObserveIPv4Ethernet(nil, dstMAC, srcIP, dstIP, ttl)
+}
+
+// ObserveIPv4Ethernet also records the previous Ethernet hop when available.
+func (a *Analyzer) ObserveIPv4Ethernet(srcMAC, dstMAC net.HardwareAddr, srcIP, dstIP net.IP, ttl uint8) {
 	src, srcOK := ipv4(srcIP)
 	dst, dstOK := ipv4(dstIP)
 	if !unicastMAC(dstMAC) || !srcOK || !dstOK {
 		return
 	}
-	a.observations[observation{dstMAC.String(), src, dst, ttl}]++
+	previous := ""
+	if unicastMAC(srcMAC) {
+		previous = srcMAC.String()
+	}
+	a.observations[observation{mac: dstMAC.String(), source: src, dest: dst, ttl: ttl, srcMAC: previous}]++
 }
 
 type TTLCount struct {
@@ -82,14 +93,16 @@ type Bit struct {
 }
 
 type Layer struct {
-	Hops              *uint8     `json:"estimated_prior_hops,omitempty"`
-	Prefix            string     `json:"candidate_prefix"`
-	Reference         string     `json:"reference_address"`
-	VarianceMask      string     `json:"variance_mask"`
-	Packets           uint64     `json:"packets"`
-	DistinctAddresses int        `json:"distinct_source_addresses"`
-	Bits              []Bit      `json:"bits"`
-	Topology          PrefixNode `json:"prefix_topology"`
+	Hops              *uint8        `json:"estimated_prior_hops,omitempty"`
+	Prefix            string        `json:"candidate_prefix"`
+	Reference         string        `json:"reference_address"`
+	VarianceMask      string        `json:"variance_mask"`
+	Packets           uint64        `json:"packets"`
+	DistinctAddresses int           `json:"distinct_source_addresses"`
+	Bits              []Bit         `json:"bits"`
+	Topology          PrefixNode    `json:"prefix_topology"`
+	PossibleNAT       *bool         `json:"may_contain_nat_gateway,omitempty"`
+	NATEvidence       []NATEvidence `json:"nat_evidence,omitempty"`
 }
 
 // PrefixNode is the common-prefix tree of observed source addresses. Nodes
@@ -102,14 +115,17 @@ type PrefixNode struct {
 }
 
 type Report struct {
-	UpstreamMAC      string      `json:"upstream_mac"`
-	UpstreamIPs      []string    `json:"upstream_arp_ips"`
-	Selection        string      `json:"selection"`
-	Candidates       []Candidate `json:"upstream_candidates"`
-	ForwardedPackets uint64      `json:"forwarded_packets"`
-	UnknownTTL       uint64      `json:"unknown_ttl_packets"`
-	Overall          Layer       `json:"overall"`
-	Layers           []Layer     `json:"hop_layers"`
+	Capture                   *quality.Snapshot `json:"capture,omitempty"`
+	UpstreamMAC               string            `json:"upstream_mac"`
+	UpstreamIPs               []string          `json:"upstream_arp_ips"`
+	Selection                 string            `json:"selection"`
+	Candidates                []Candidate       `json:"upstream_candidates"`
+	ForwardedPackets          uint64            `json:"forwarded_packets"`
+	UnknownTTL                uint64            `json:"unknown_ttl_packets"`
+	Overall                   Layer             `json:"overall"`
+	Layers                    []Layer           `json:"hop_layers"`
+	PreviousHops              []PreviousHop     `json:"previous_hops,omitempty"`
+	UnknownPreviousHopPackets uint64            `json:"unknown_previous_hop_packets"`
 }
 
 type Candidate struct {
@@ -290,7 +306,7 @@ func (a *Analyzer) Report(override net.HardwareAddr) (Report, error) {
 	}
 	sort.Strings(report.UpstreamIPs)
 	var all layerBuilder
-	layers := make(map[uint8]*layerBuilder)
+	weighted := make([]weightedObservation, 0)
 	// Sorting makes the chosen reference address reproducible.
 	observations := make([]observation, 0, len(a.observations))
 	for obs := range a.observations {
@@ -312,28 +328,19 @@ func (a *Analyzer) Report(override net.HardwareAddr) (Report, error) {
 		count := a.observations[obs]
 		report.ForwardedPackets += count
 		all.add(obs.source, obs.ttl, a.maxHops, count)
-		_, hops, ok := estimateTTL(obs.ttl, a.maxHops)
+		weighted = append(weighted, weightedObservation{obs: obs, count: count})
+		_, _, ok := estimateTTL(obs.ttl, a.maxHops)
 		if !ok {
 			report.UnknownTTL += count
 			continue
 		}
-		if layers[hops] == nil {
-			layers[hops] = &layerBuilder{}
-		}
-		layers[hops].add(obs.source, obs.ttl, a.maxHops, count)
 	}
 	if all.packets == 0 {
 		return Report{}, errors.New("no forwarded IPv4 packets observed for upstream MAC")
 	}
 	report.Overall = all.result(nil)
-	hopValues := make([]int, 0, len(layers))
-	for hop := range layers {
-		hopValues = append(hopValues, int(hop))
-	}
-	sort.Ints(hopValues)
-	for _, h := range hopValues {
-		hop := uint8(h)
-		report.Layers = append(report.Layers, layers[hop].result(&hop))
-	}
+	report.PreviousHops = a.previousHops(mac)
+	report.UnknownPreviousHopPackets = a.unknownPreviousHopPackets()
+	report.Layers = hopLayers(weighted, a.maxHops)
 	return report, nil
 }

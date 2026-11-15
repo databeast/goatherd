@@ -1,15 +1,13 @@
 package cmd
 
 import (
-	"context"
-	"encoding/json"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/databeast/goatherd/collector"
 	"github.com/databeast/goatherd/internal/coordination"
@@ -19,9 +17,9 @@ import (
 )
 
 func tlsFlags(command *cobra.Command) {
-	command.Flags().String("tls-cert", "", "PEM certificate")
-	command.Flags().String("tls-key", "", "PEM private key")
-	command.Flags().String("tls-ca", "", "PEM certificate authority")
+	command.Flags().String("tls-cert", "", "PEM certificate file")
+	command.Flags().String("tls-key", "", "PEM private key file")
+	command.Flags().String("tls-ca", "", "PEM certificate authority file")
 }
 
 func tlsOptions(cmd *cobra.Command, server bool) (credentials.TransportCredentials, error) {
@@ -37,10 +35,14 @@ func tlsOptions(cmd *cobra.Command, server bool) (credentials.TransportCredentia
 	if err != nil {
 		return nil, err
 	}
-	if cert == "" || key == "" || ca == "" {
-		return nil, fmt.Errorf("--tls-cert, --tls-key and --tls-ca are required")
+	var config *tls.Config
+	if cert == "" && key == "" && ca == "" {
+		config, err = coordination.EmbeddedTLSConfig(server)
+	} else if cert == "" || key == "" || ca == "" {
+		return nil, fmt.Errorf("--tls-cert, --tls-key and --tls-ca must be supplied together")
+	} else {
+		config, err = coordination.TLSConfig(cert, key, ca, server)
 	}
-	config, err := coordination.TLSConfig(cert, key, ca, server)
 	if err != nil {
 		return nil, err
 	}
@@ -62,20 +64,8 @@ func connectCoordinator(cmd *cobra.Command) (*grpc.ClientConn, error) {
 	return grpc.NewClient(addr, grpc.WithTransportCredentials(creds))
 }
 
-type coordinatorReport struct {
-	CapturePoint string          `json:"capture_point"`
-	Report       json.RawMessage `json:"report,omitempty"`
-	Error        string          `json:"error,omitempty"`
-}
-
 func writeCoordinatorReports(w io.Writer, response *coordination.ReportsResponse) error {
-	reports := make([]coordinatorReport, 0, len(response.Reports))
-	for _, report := range response.Reports {
-		reports = append(reports, coordinatorReport{CapturePoint: report.CapturePoint, Report: report.ReportJson, Error: report.Error})
-	}
-	encoder := json.NewEncoder(w)
-	encoder.SetIndent("", "  ")
-	return encoder.Encode(reports)
+	return coordination.WriteReportsJSON(w, response)
 }
 
 func runCoordinator(cmd *cobra.Command, _ []string) error {
@@ -115,11 +105,11 @@ func runCoordinator(cmd *cobra.Command, _ []string) error {
 		if err := <-done; err != nil {
 			return fmt.Errorf("coordinator server: %w", err)
 		}
-		reports, err := service.Reports(context.Background(), &coordination.ReportsRequest{})
+		evidenceDump, err := cmd.Flags().GetBool("evidence")
 		if err != nil {
 			return err
 		}
-		return writeCoordinatorReports(cmd.OutOrStdout(), reports)
+		return service.WriteReports(cmd.OutOrStdout(), evidenceDump)
 	}
 }
 
@@ -129,13 +119,82 @@ func runCoordinatorReports(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	defer conn.Close()
-	ctx, cancel := context.WithTimeout(cmd.Context(), 15*time.Second)
-	defer cancel()
-	reports, err := coordination.NewCoordinatorClient(conn).Reports(ctx, &coordination.ReportsRequest{})
+	evidenceDump, err := cmd.Flags().GetBool("evidence")
+	if err != nil {
+		return err
+	}
+	stream, err := coordination.NewCoordinatorClient(conn).StreamReports(cmd.Context(), &coordination.ReportsRequest{Evidence: evidenceDump})
 	if err != nil {
 		return fmt.Errorf("retrieve reports: %w", err)
 	}
-	return writeCoordinatorReports(cmd.OutOrStdout(), reports)
+	return writeReportsStream(cmd.OutOrStdout(), stream)
+}
+
+func writeReportsStream(w io.Writer, stream coordination.Coordinator_StreamReportsClient) error {
+	received := false
+	for {
+		chunk, err := stream.Recv()
+		if err == io.EOF {
+			if !received {
+				return fmt.Errorf("coordinator returned an empty reports stream")
+			}
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("retrieve reports: %w", err)
+		}
+		if len(chunk.Data) == 0 {
+			return fmt.Errorf("coordinator returned an empty reports chunk")
+		}
+		received = true
+		n, err := w.Write(chunk.Data)
+		if err != nil {
+			return fmt.Errorf("write reports: %w", err)
+		}
+		if n != len(chunk.Data) {
+			return io.ErrShortWrite
+		}
+	}
+}
+func runCoordinatorInventory(cmd *cobra.Command, _ []string) error {
+	conn, err := connectCoordinator(cmd)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	stream, err := coordination.NewCoordinatorClient(conn).Inventory(cmd.Context(), &coordination.InventoryRequest{})
+	if err != nil {
+		return fmt.Errorf("retrieve inventory: %w", err)
+	}
+	return writeInventoryStream(cmd.OutOrStdout(), stream)
+}
+
+func writeInventoryStream(w io.Writer, stream coordination.Coordinator_InventoryClient) error {
+	received := false
+	for {
+		chunk, err := stream.Recv()
+		if err == io.EOF {
+			if !received {
+				return fmt.Errorf("coordinator returned an empty inventory")
+			}
+			_, err = fmt.Fprintln(w)
+			return err
+		}
+		if err != nil {
+			return fmt.Errorf("retrieve inventory: %w", err)
+		}
+		if len(chunk.Data) == 0 {
+			return fmt.Errorf("coordinator returned an empty inventory chunk")
+		}
+		received = true
+		n, err := w.Write(chunk.Data)
+		if err != nil {
+			return fmt.Errorf("write inventory: %w", err)
+		}
+		if n != len(chunk.Data) {
+			return io.ErrShortWrite
+		}
+	}
 }
 
 func runRemoteCollector(cmd *cobra.Command, _ []string) error {

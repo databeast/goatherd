@@ -8,10 +8,31 @@ import (
 	"syscall"
 
 	"github.com/databeast/goatherd/collector"
+	"github.com/databeast/goatherd/internal/discovery"
+	"github.com/databeast/goatherd/internal/quality"
 	"github.com/databeast/goatherd/mapper"
 	"github.com/databeast/goatherd/reporter"
 	"github.com/spf13/cobra"
 )
+
+type captureQualitySink struct {
+	collector.ObservationSink
+	snapshot quality.Snapshot
+}
+
+func (s *captureQualitySink) ObserveQuality(snapshot quality.Snapshot) {
+	s.snapshot = snapshot
+}
+
+func (s *captureQualitySink) ObserveIPv4Ethernet(srcMAC, dstMAC net.HardwareAddr, srcIP, dstIP net.IP, ttl uint8) {
+	if observer, ok := s.ObservationSink.(interface {
+		ObserveIPv4Ethernet(net.HardwareAddr, net.HardwareAddr, net.IP, net.IP, uint8)
+	}); ok {
+		observer.ObserveIPv4Ethernet(srcMAC, dstMAC, srcIP, dstIP, ttl)
+	} else {
+		s.ObserveIPv4(dstMAC, srcIP, dstIP, ttl)
+	}
+}
 
 var standaloneCmd = &cobra.Command{
 	Use:   "standalone",
@@ -43,6 +64,10 @@ func standaloneMode(cmd *cobra.Command, args []string) error {
 	if format != "json" && format != "jsonld" && format != "text" {
 		return fmt.Errorf("unsupported report format %q (choose json, jsonld or text)", format)
 	}
+	evidenceDump, err := cmd.Flags().GetBool("evidence")
+	if err != nil {
+		return err
+	}
 	var upstream net.HardwareAddr
 	if macText != "" {
 		upstream, err = net.ParseMAC(macText)
@@ -60,12 +85,30 @@ func standaloneMode(cmd *cobra.Command, args []string) error {
 	if filename == "" {
 		fmt.Fprintf(cmd.ErrOrStderr(), "Capturing on %s; interrupt to produce a report.\n", iface)
 	}
-	if err := collector.Observe(ctx, filename, iface, point); err != nil {
+	sink := &captureQualitySink{ObservationSink: point}
+	if err := collector.Observe(ctx, filename, iface, sink); err != nil {
+		var evidence *discovery.Evidence
+		if evidenceDump {
+			_, details, _ := point.ReportWithEvidence(upstream)
+			evidence = &details
+		}
+		if writeErr := reporter.WriteUnavailableEvidence(cmd.OutOrStdout(), format, sink.snapshot, err.Error(), evidence); writeErr != nil {
+			return fmt.Errorf("capture: %v; write report: %w", err, writeErr)
+		}
 		return err
 	}
 	report, err := point.Report(upstream)
 	if err != nil {
-		return err
+		var evidence *discovery.Evidence
+		if evidenceDump {
+			_, details, _ := point.ReportWithEvidence(upstream)
+			evidence = &details
+		}
+		return reporter.WriteUnavailableEvidence(cmd.OutOrStdout(), format, sink.snapshot, err.Error(), evidence)
+	}
+	report.Capture = &sink.snapshot
+	if !evidenceDump {
+		return reporter.WriteSummary(cmd.OutOrStdout(), format, report)
 	}
 	if format == "text" {
 		return reporter.WriteText(cmd.OutOrStdout(), report)
@@ -83,4 +126,5 @@ func init() {
 	standaloneCmd.Flags().String("upstream-mac", "", "use this upstream MAC instead of detecting it from ARP")
 	standaloneCmd.Flags().Uint8("max-hops", 6, "maximum prior hops for a TTL estimate")
 	standaloneCmd.Flags().String("format", "json", "report format: json, jsonld or text")
+	standaloneCmd.Flags().Bool("evidence", false, "include full diagnostic evidence instead of the summary report")
 }

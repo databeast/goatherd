@@ -1,10 +1,12 @@
 package collector
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 
 	"github.com/databeast/goatherd/internal/coordination"
+	"github.com/databeast/goatherd/internal/quality"
 )
 
 // RemoteSink forwards capture observations to a coordinator stream.
@@ -33,14 +35,30 @@ func (s *RemoteSink) ObserveARP(mac net.HardwareAddr, ip net.IP) {
 }
 
 func (s *RemoteSink) ObserveIPv4(mac net.HardwareAddr, src, dst net.IP, ttl uint8) {
+	s.ObserveIPv4Ethernet(nil, mac, src, dst, ttl)
+}
+
+func (s *RemoteSink) ObserveIPv4Ethernet(srcMAC, mac net.HardwareAddr, src, dst net.IP, ttl uint8) {
 	if s.err == nil {
 		s.err = s.stream.Send(&coordination.Observation{Data: &coordination.Observation_Ipv4{
-			Ipv4: &coordination.IPv4{DestinationMac: mac, SourceIp: src.To4(), DestinationIp: dst.To4(), Ttl: uint32(ttl)},
+			Ipv4: &coordination.IPv4{SourceMac: srcMAC, DestinationMac: mac, SourceIp: src.To4(), DestinationIp: dst.To4(), Ttl: uint32(ttl)},
 		}})
 	}
 }
 
 func (s *RemoteSink) Err() error { return s.err }
+
+func (s *RemoteSink) ObserveQuality(snapshot quality.Snapshot) {
+	if s.err != nil {
+		return
+	}
+	data, err := json.Marshal(snapshot)
+	if err != nil {
+		s.err = fmt.Errorf("encode capture quality: %w", err)
+		return
+	}
+	s.err = s.stream.Send(&coordination.Observation{Data: &coordination.Observation_QualityJson{QualityJson: data}})
+}
 
 func (s *RemoteSink) Close() (*coordination.CollectResult, error) {
 	result, err := s.stream.CloseAndRecv()

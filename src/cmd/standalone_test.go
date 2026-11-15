@@ -52,6 +52,7 @@ func TestStandalonePCAPJSON(t *testing.T) {
 	command.Flags().String("upstream-mac", "02:00:00:00:00:01", "")
 	command.Flags().Uint8("max-hops", 6, "")
 	command.Flags().String("format", "json", "")
+	command.Flags().Bool("evidence", true, "")
 	if err := standaloneMode(command, nil); err != nil {
 		t.Fatal(err)
 	}
@@ -60,7 +61,11 @@ func TestStandalonePCAPJSON(t *testing.T) {
 		t.Fatal(err)
 	}
 	if report.Selection != "configured" || report.Overall.Prefix != "10.0.0.1/32" ||
-		len(report.Layers) != 1 || *report.Layers[0].Hops != 3 {
+		len(report.Layers) != 1 || *report.Layers[0].Hops != 3 || report.Capture == nil ||
+		report.Capture.Status != "completed" || report.Capture.Packets != 1 || report.Capture.IPv4Packets != 1 ||
+		report.Capture.Stats != nil || report.Capture.StatsError == "" ||
+		len(report.PreviousHops) != 1 || report.PreviousHops[0].MAC != "02:00:00:00:00:02" ||
+		report.PreviousHops[0].TowardUpstream == nil {
 		t.Fatalf("unexpected report: %+v", report)
 	}
 	output.Reset()
@@ -87,6 +92,41 @@ func TestStandalonePCAPJSON(t *testing.T) {
 	}
 	if document["@type"] != "schema:Dataset" || document["@context"] == nil {
 		t.Fatalf("unexpected JSON-LD report: %+v", document)
+	}
+	output.Reset()
+	if err := command.Flags().Set("upstream-mac", ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := command.Flags().Set("format", "json"); err != nil {
+		t.Fatal(err)
+	}
+	if err := standaloneMode(command, nil); err != nil {
+		t.Fatal(err)
+	}
+	var unavailable struct {
+		Error    string             `json:"inference_error"`
+		Evidence discovery.Evidence `json:"evidence"`
+	}
+	if err := json.Unmarshal(output.Bytes(), &unavailable); err != nil {
+		t.Fatal(err)
+	}
+	if unavailable.Error == "" || len(unavailable.Evidence.PreviousHops) != 1 ||
+		unavailable.Evidence.PreviousHops[0].TowardUpstream != nil {
+		t.Fatalf("missing evidence without upstream: %+v", unavailable)
+	}
+	output.Reset()
+	if err := command.Flags().Set("upstream-mac", "02:00:00:00:00:01"); err != nil {
+		t.Fatal(err)
+	}
+	if err := command.Flags().Set("evidence", "false"); err != nil {
+		t.Fatal(err)
+	}
+	if err := standaloneMode(command, nil); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(output.String(), `"candidate_prefix": "10.0.0.1/32"`) ||
+		strings.Contains(output.String(), `"ttl_counts"`) || strings.Contains(output.String(), `"prefix_topology"`) {
+		t.Fatalf("unexpected summary: %s", output.String())
 	}
 	if err := command.Flags().Set("format", "invalid"); err != nil {
 		t.Fatal(err)

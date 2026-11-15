@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Coordinator_Collect_FullMethodName = "/goatherd.coordination.v1.Coordinator/Collect"
-	Coordinator_Reports_FullMethodName = "/goatherd.coordination.v1.Coordinator/Reports"
+	Coordinator_Collect_FullMethodName       = "/goatherd.coordination.v1.Coordinator/Collect"
+	Coordinator_Inventory_FullMethodName     = "/goatherd.coordination.v1.Coordinator/Inventory"
+	Coordinator_StreamReports_FullMethodName = "/goatherd.coordination.v1.Coordinator/StreamReports"
 )
 
 // CoordinatorClient is the client API for Coordinator service.
@@ -28,7 +29,8 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CoordinatorClient interface {
 	Collect(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[Observation, CollectResult], error)
-	Reports(ctx context.Context, in *ReportsRequest, opts ...grpc.CallOption) (*ReportsResponse, error)
+	Inventory(ctx context.Context, in *InventoryRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[InventoryChunk], error)
+	StreamReports(ctx context.Context, in *ReportsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ReportsChunk], error)
 }
 
 type coordinatorClient struct {
@@ -52,22 +54,51 @@ func (c *coordinatorClient) Collect(ctx context.Context, opts ...grpc.CallOption
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type Coordinator_CollectClient = grpc.ClientStreamingClient[Observation, CollectResult]
 
-func (c *coordinatorClient) Reports(ctx context.Context, in *ReportsRequest, opts ...grpc.CallOption) (*ReportsResponse, error) {
+func (c *coordinatorClient) Inventory(ctx context.Context, in *InventoryRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[InventoryChunk], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ReportsResponse)
-	err := c.cc.Invoke(ctx, Coordinator_Reports_FullMethodName, in, out, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &Coordinator_ServiceDesc.Streams[1], Coordinator_Inventory_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &grpc.GenericClientStream[InventoryRequest, InventoryChunk]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
 }
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Coordinator_InventoryClient = grpc.ServerStreamingClient[InventoryChunk]
+
+func (c *coordinatorClient) StreamReports(ctx context.Context, in *ReportsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ReportsChunk], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &Coordinator_ServiceDesc.Streams[2], Coordinator_StreamReports_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[ReportsRequest, ReportsChunk]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Coordinator_StreamReportsClient = grpc.ServerStreamingClient[ReportsChunk]
 
 // CoordinatorServer is the server API for Coordinator service.
 // All implementations must embed UnimplementedCoordinatorServer
 // for forward compatibility.
 type CoordinatorServer interface {
 	Collect(grpc.ClientStreamingServer[Observation, CollectResult]) error
-	Reports(context.Context, *ReportsRequest) (*ReportsResponse, error)
+	Inventory(*InventoryRequest, grpc.ServerStreamingServer[InventoryChunk]) error
+	StreamReports(*ReportsRequest, grpc.ServerStreamingServer[ReportsChunk]) error
 	mustEmbedUnimplementedCoordinatorServer()
 }
 
@@ -81,8 +112,11 @@ type UnimplementedCoordinatorServer struct{}
 func (UnimplementedCoordinatorServer) Collect(grpc.ClientStreamingServer[Observation, CollectResult]) error {
 	return status.Errorf(codes.Unimplemented, "method Collect not implemented")
 }
-func (UnimplementedCoordinatorServer) Reports(context.Context, *ReportsRequest) (*ReportsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Reports not implemented")
+func (UnimplementedCoordinatorServer) Inventory(*InventoryRequest, grpc.ServerStreamingServer[InventoryChunk]) error {
+	return status.Errorf(codes.Unimplemented, "method Inventory not implemented")
+}
+func (UnimplementedCoordinatorServer) StreamReports(*ReportsRequest, grpc.ServerStreamingServer[ReportsChunk]) error {
+	return status.Errorf(codes.Unimplemented, "method StreamReports not implemented")
 }
 func (UnimplementedCoordinatorServer) mustEmbedUnimplementedCoordinatorServer() {}
 func (UnimplementedCoordinatorServer) testEmbeddedByValue()                     {}
@@ -112,23 +146,27 @@ func _Coordinator_Collect_Handler(srv interface{}, stream grpc.ServerStream) err
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type Coordinator_CollectServer = grpc.ClientStreamingServer[Observation, CollectResult]
 
-func _Coordinator_Reports_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ReportsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
+func _Coordinator_Inventory_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(InventoryRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(CoordinatorServer).Reports(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Coordinator_Reports_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoordinatorServer).Reports(ctx, req.(*ReportsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(CoordinatorServer).Inventory(m, &grpc.GenericServerStream[InventoryRequest, InventoryChunk]{ServerStream: stream})
 }
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Coordinator_InventoryServer = grpc.ServerStreamingServer[InventoryChunk]
+
+func _Coordinator_StreamReports_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ReportsRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(CoordinatorServer).StreamReports(m, &grpc.GenericServerStream[ReportsRequest, ReportsChunk]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Coordinator_StreamReportsServer = grpc.ServerStreamingServer[ReportsChunk]
 
 // Coordinator_ServiceDesc is the grpc.ServiceDesc for Coordinator service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -136,17 +174,22 @@ func _Coordinator_Reports_Handler(srv interface{}, ctx context.Context, dec func
 var Coordinator_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "goatherd.coordination.v1.Coordinator",
 	HandlerType: (*CoordinatorServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "Reports",
-			Handler:    _Coordinator_Reports_Handler,
-		},
-	},
+	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "Collect",
 			Handler:       _Coordinator_Collect_Handler,
 			ClientStreams: true,
+		},
+		{
+			StreamName:    "Inventory",
+			Handler:       _Coordinator_Inventory_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "StreamReports",
+			Handler:       _Coordinator_StreamReports_Handler,
+			ServerStreams: true,
 		},
 	},
 	Metadata: "internal/coordination/coordination.proto",

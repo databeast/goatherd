@@ -27,11 +27,17 @@ var mapperCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(mapperCmd)
 	mapperCmd.Flags().String("listen", "127.0.0.1:8432", "coordinator listen address")
+	mapperCmd.Flags().Bool("evidence", false, "write full diagnostic evidence at shutdown")
 	tlsFlags(mapperCmd)
 	reports := &cobra.Command{Use: "reports", Short: "retrieve coordinator reports", RunE: runCoordinatorReports}
 	reports.Flags().String("coordinator", "", "coordinator host:port")
+	reports.Flags().Bool("evidence", false, "retrieve full diagnostic evidence instead of summaries")
 	tlsFlags(reports)
 	mapperCmd.AddCommand(reports)
+	inventory := &cobra.Command{Use: "inventory", Short: "retrieve consolidated address evidence", RunE: runCoordinatorInventory}
+	inventory.Flags().String("coordinator", "", "coordinator host:port")
+	tlsFlags(inventory)
+	mapperCmd.AddCommand(inventory)
 
 	// Here you will define your flags and configuration settings.
 
