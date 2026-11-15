@@ -3,6 +3,10 @@
 Goatherd passively estimates downstream IPv4 address space from Ethernet traffic. It compares source addresses forwarded
 to an upstream gateway and uses observed TTLs as evidence of prior hops.
 
+This is a recreation and evolution of a python tool I originally created in 2009, for producing more accurate $HOME_NET var declarations for Snort IDS deployments.
+
+Since then, modern networking has taken a broad sweep towards software-defined subnets and other layers of complexity that make the simple CIDR maps of networks-of-old and order of magnitude less accurate of a true network topology map, so goatherd remains as a demonstration of how passive inference of IP headers and stack basics can still describe the rough topology of IP networks and routing.
+
 ## Requirements
 
 - Go (see the version in `src/go.mod`)
