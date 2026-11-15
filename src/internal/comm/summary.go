@@ -1,9 +1,10 @@
 package comm
 
 import (
+	"net"
+
 	"github.com/pkg/errors"
 	"github.com/vmihailenco/msgpack/v5"
-	"net"
 )
 
 type PacketSummary struct {

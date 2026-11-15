@@ -3,11 +3,12 @@ package capture
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/databeast/goatherd/internal/comm"
-	"github.com/pkg/errors"
 	"math/rand"
 	"net"
 	"sync"
+
+	"github.com/databeast/goatherd/internal/comm"
+	"github.com/pkg/errors"
 )
 
 type macaddrstr string

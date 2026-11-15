@@ -8,7 +8,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/databeast/goatherd/internal/discovery"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
@@ -19,8 +18,19 @@ type capturedPacket struct {
 	err    error
 }
 
+// ObservationSink receives the ARP and IPv4 evidence from one capture point.
+type ObservationSink interface {
+	ObserveARP(mac net.HardwareAddr, ip net.IP)
+	ObserveIPv4(dstMAC net.HardwareAddr, srcIP, dstIP net.IP, ttl uint8)
+}
+
 // Observe reads Ethernet IPv4 and ARP traffic until EOF or cancellation.
-func Observe(ctx context.Context, filename, iface string, analyzer *discovery.Analyzer) error {
+func Observe(ctx context.Context, filename, iface string, sink ObservationSink) error {
+	if sink == nil {
+		return fmt.Errorf("observation sink is required")
+	}
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	var handle *pcap.Handle
 	var err error
 	if filename != "" {
@@ -73,12 +83,17 @@ func Observe(ctx context.Context, filename, iface string, analyzer *discovery.An
 			if captured.err != nil {
 				return fmt.Errorf("read capture: %w", captured.err)
 			}
-			observePacket(analyzer, captured.packet)
+			observePacket(sink, captured.packet)
+			if checked, ok := sink.(interface{ Err() error }); ok {
+				if err := checked.Err(); err != nil {
+					return fmt.Errorf("send observation: %w", err)
+				}
+			}
 		}
 	}
 }
 
-func observePacket(analyzer *discovery.Analyzer, packet gopacket.Packet) {
+func observePacket(sink ObservationSink, packet gopacket.Packet) {
 	ethernetLayer := packet.Layer(layers.LayerTypeEthernet)
 	if ethernetLayer == nil {
 		return
@@ -88,11 +103,11 @@ func observePacket(analyzer *discovery.Analyzer, packet gopacket.Packet) {
 		arp := arpLayer.(*layers.ARP)
 		if arp.AddrType == layers.LinkTypeEthernet && arp.Protocol == layers.EthernetTypeIPv4 &&
 			bytes.Equal(ethernet.SrcMAC, arp.SourceHwAddress) {
-			analyzer.ObserveARP(net.HardwareAddr(arp.SourceHwAddress), net.IP(arp.SourceProtAddress))
+			sink.ObserveARP(net.HardwareAddr(arp.SourceHwAddress), net.IP(arp.SourceProtAddress))
 		}
 	}
 	if ipLayer := packet.Layer(layers.LayerTypeIPv4); ipLayer != nil {
 		ip := ipLayer.(*layers.IPv4)
-		analyzer.ObserveIPv4(ethernet.DstMAC, ip.SrcIP, ip.DstIP, ip.TTL)
+		sink.ObserveIPv4(ethernet.DstMAC, ip.SrcIP, ip.DstIP, ip.TTL)
 	}
 }

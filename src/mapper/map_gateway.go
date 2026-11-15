@@ -1,8 +1,9 @@
 package mapper
 
 import (
-	"github.com/databeast/goatherd/internal/capture"
 	"net"
+
+	"github.com/databeast/goatherd/internal/capture"
 )
 
 type direction bool

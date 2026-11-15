@@ -3,11 +3,12 @@ package collector
 import (
 	"context"
 	"encoding/binary"
+	"net"
+
 	"github.com/databeast/goatherd/internal/capture"
 	packets2 "github.com/databeast/goatherd/internal/comm"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
-	"net"
 )
 
 // Collector defines any packet capture collector

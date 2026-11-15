@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package goatherd.coordination.v1;
+
+option go_package = "github.com/databeast/goatherd/internal/coordination";
+
+service Coordinator {
+  rpc Collect(stream Observation) returns (CollectResult);
+  rpc Reports(ReportsRequest) returns (ReportsResponse);
+}
+
+message Registration {
+  string capture_point = 1;
+  uint32 max_hops = 2;
+  bytes upstream_mac = 3;
+}
+
+message ARP {
+  bytes mac = 1;
+  bytes ip = 2;
+}
+
+message IPv4 {
+  bytes destination_mac = 1;
+  bytes source_ip = 2;
+  bytes destination_ip = 3;
+  uint32 ttl = 4;
+}
+
+message Observation {
+  oneof data {
+    Registration registration = 1;
+    ARP arp = 2;
+    IPv4 ipv4 = 3;
+  }
+}
+
+message CollectResult {
+  uint64 observations = 1;
+}
+
+message ReportsRequest {}
+
+message CaptureReport {
+  string capture_point = 1;
+  bytes report_json = 2;
+  string error = 3;
+}
+
+message ReportsResponse {
+  repeated CaptureReport reports = 1;
+}

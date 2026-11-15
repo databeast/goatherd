@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,25 +15,24 @@ limitations under the License.
 */
 package cmd
 
-import (
-	"fmt"
-
-	"github.com/spf13/cobra"
-)
+import "github.com/spf13/cobra"
 
 // collectorCmd represents the collector command
 var collectorCmd = &cobra.Command{
 	Use:   "collector",
-	Short: "remote packet collector mode",
-	Long: `in this mode goatherd will only collect packet summaries, and forware them to a remote 
-    collector for aggregration and processing `,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("collector called")
-	},
+	Short: "stream captured observations to a coordinator",
+	RunE:  runRemoteCollector,
 }
 
 func init() {
 	rootCmd.AddCommand(collectorCmd)
+	collectorCmd.Flags().String("coordinator", "", "coordinator host:port")
+	collectorCmd.Flags().String("capture-point", "", "unique capture point name")
+	collectorCmd.Flags().String("pcap", "", "read an Ethernet pcap file instead of live capture")
+	collectorCmd.Flags().String("interface", "eth0", "live capture interface")
+	collectorCmd.Flags().String("upstream-mac", "", "known upstream MAC")
+	collectorCmd.Flags().Uint8("max-hops", 6, "maximum prior hops for a TTL estimate")
+	tlsFlags(collectorCmd)
 
 	// Here you will define your flags and configuration settings.
 

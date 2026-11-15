@@ -27,6 +27,44 @@ Analyze an Ethernet capture file:
 ./goatherd standalone --pcap capture.pcap
 ```
 
+The default report format is JSON. For a human-readable report, add `--format text`. Use `--format jsonld` for JSON-LD
+with an inline context: the report is a Schema.org `Dataset`, while discovery-specific terms use the
+`https://github.com/databeast/goatherd#` namespace. The namespace identifies project-defined terms; it is not a hosted
+JSON-LD context or a claim that those terms are part of Schema.org. JSON-LD processors omit null values from the RDF
+graph, so an unavailable TTL estimate is represented by absent properties there.
+
+Standalone mode uses one local mapper capture point. The local mapper keeps evidence separate per capture-point ID.
+
+## Distributed capture
+
+The `mapper` command runs a central gRPC coordinator. Each `collector` streams Ethernet ARP and IPv4 observations to
+one named capture point; the coordinator keeps their evidence separate and runs the same discovery logic as standalone.
+Connections require mutual TLS: the coordinator and every client need a certificate and private key, and each side must
+trust the other side's certificate authority. The coordinator certificate must include the host name used by clients.
+
+```sh
+# Coordinator; use an appropriate bind address for remote clients.
+./goatherd mapper --listen 0.0.0.0:8432 --tls-cert server.pem --tls-key server-key.pem --tls-ca client-ca.pem
+
+# Remote host (or add --pcap capture.pcap instead of --interface).
+./goatherd collector --coordinator coordinator.example:8432 --capture-point recorder-1 --interface eth0 \
+  --tls-cert client.pem --tls-key client-key.pem --tls-ca server-ca.pem
+
+# Retrieve current reports without stopping the coordinator.
+./goatherd mapper reports --coordinator coordinator.example:8432 \
+  --tls-cert client.pem --tls-key client-key.pem --tls-ca server-ca.pem
+```
+
+Reports are JSON arrays containing the capture point name and either its discovery report or an error explaining why
+one is not yet available. The coordinator also writes this array to standard output on Ctrl+C or SIGTERM. A collector
+can specify `--upstream-mac` and `--max-hops`, as in standalone mode.
+
+Capture point names must be unique for the lifetime of the coordinator. A disconnected collector cannot resume the
+same name; its accumulated evidence remains available until the coordinator exits. State is held in memory and is lost
+on restart. The coordinator trusts any client certificate signed by its configured CA for both submissions and report
+access; use a dedicated CA for this trusted group. The coordinator does not currently enforce per-client authorization,
+automatic retries, persistence, or bounded observation storage.
+
 Or capture live traffic, then press Ctrl+C to produce a report:
 
 ```sh

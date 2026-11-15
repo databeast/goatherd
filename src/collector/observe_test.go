@@ -81,3 +81,9 @@ func TestObserveRejectsNonEthernet(t *testing.T) {
 		t.Fatal("expected unsupported link type error")
 	}
 }
+
+func TestObserveRejectsMissingSink(t *testing.T) {
+	if err := Observe(context.Background(), "", "", nil); err == nil {
+		t.Fatal("expected missing observation sink error")
+	}
+}

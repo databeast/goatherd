@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"net"
+
 	"github.com/databeast/goatherd/internal/capture"
 	packets2 "github.com/databeast/goatherd/internal/comm"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"net"
 	//"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	//"net"
@@ -29,7 +30,7 @@ func (i *ingester) Ingest(server packets2.PacketCollection_IngestServer) error {
 	for {
 		p, err := server.Recv()
 		if err != nil {
-			return status.Errorf(codes.Internal, err.Error())
+			return status.Error(codes.Internal, err.Error())
 		}
 		ps := packets2.PacketSummary{}
 
@@ -69,7 +70,7 @@ func (i *ingester) CapturePoint(ctx context.Context, req *packets2.RegisterCaptu
 	// ok, its a new capture point
 	point, err := capture.NewCapturePoint()
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 	point.LocalNet = net.IPNet{}
 	binary.BigEndian.PutUint32(point.LocalNet.IP, req.Netaddr)

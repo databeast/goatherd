@@ -4,8 +4,9 @@
 package subnets
 
 import (
-	"github.com/databeast/goatherd/internal/comm"
 	"sync"
+
+	"github.com/databeast/goatherd/internal/comm"
 )
 
 // TTLs vary by OS, but are almost always derived from a bit boundary integer

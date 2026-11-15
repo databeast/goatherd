@@ -2,14 +2,15 @@ package collector
 
 import (
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/databeast/goatherd/internal/capture"
 	"github.com/databeast/goatherd/internal/comm"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	"github.com/pkg/errors"
-	"log"
-	"time"
 )
 
 // BPF Filter syntax to only capture TCP SYN (open new connection) comm

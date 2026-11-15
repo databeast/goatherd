@@ -2,10 +2,11 @@
 package capture
 
 import (
-	"github.com/databeast/goatherd/internal/comm"
-	"github.com/pkg/errors"
 	"net"
 	"sync"
+
+	"github.com/databeast/goatherd/internal/comm"
+	"github.com/pkg/errors"
 )
 
 // Tracking of Identified gateways on the local subnet

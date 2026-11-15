@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -9,7 +8,8 @@ import (
 	"syscall"
 
 	"github.com/databeast/goatherd/collector"
-	"github.com/databeast/goatherd/internal/discovery"
+	"github.com/databeast/goatherd/mapper"
+	"github.com/databeast/goatherd/reporter"
 	"github.com/spf13/cobra"
 )
 
@@ -36,6 +36,13 @@ func standaloneMode(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	format, err := cmd.Flags().GetString("format")
+	if err != nil {
+		return err
+	}
+	if format != "json" && format != "jsonld" && format != "text" {
+		return fmt.Errorf("unsupported report format %q (choose json, jsonld or text)", format)
+	}
 	var upstream net.HardwareAddr
 	if macText != "" {
 		upstream, err = net.ParseMAC(macText)
@@ -45,20 +52,28 @@ func standaloneMode(cmd *cobra.Command, args []string) error {
 	}
 	ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	analyzer := discovery.New(maxHops)
-	if filename == "" {
-		fmt.Fprintf(cmd.ErrOrStderr(), "Capturing on %s; interrupt to produce a report.\n", iface)
-	}
-	if err := collector.Observe(ctx, filename, iface, analyzer); err != nil {
-		return err
-	}
-	report, err := analyzer.Report(upstream)
+	localMapper := mapper.NewLocalMapper()
+	point, err := localMapper.AddCapturePoint(0, maxHops)
 	if err != nil {
 		return err
 	}
-	encoder := json.NewEncoder(cmd.OutOrStdout())
-	encoder.SetIndent("", "  ")
-	return encoder.Encode(report)
+	if filename == "" {
+		fmt.Fprintf(cmd.ErrOrStderr(), "Capturing on %s; interrupt to produce a report.\n", iface)
+	}
+	if err := collector.Observe(ctx, filename, iface, point); err != nil {
+		return err
+	}
+	report, err := point.Report(upstream)
+	if err != nil {
+		return err
+	}
+	if format == "text" {
+		return reporter.WriteText(cmd.OutOrStdout(), report)
+	}
+	if format == "jsonld" {
+		return reporter.WriteJSONLD(cmd.OutOrStdout(), report)
+	}
+	return reporter.WriteJSON(cmd.OutOrStdout(), report)
 }
 
 func init() {
@@ -67,4 +82,5 @@ func init() {
 	standaloneCmd.Flags().String("interface", "eth0", "live capture interface")
 	standaloneCmd.Flags().String("upstream-mac", "", "use this upstream MAC instead of detecting it from ARP")
 	standaloneCmd.Flags().Uint8("max-hops", 6, "maximum prior hops for a TTL estimate")
+	standaloneCmd.Flags().String("format", "json", "report format: json, jsonld or text")
 }

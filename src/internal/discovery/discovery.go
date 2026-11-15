@@ -4,10 +4,10 @@ package discovery
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
-	"math/bits"
 	"net"
 	"sort"
+
+	"github.com/databeast/goatherd/internal/subnets"
 )
 
 type observation struct {
@@ -181,11 +181,9 @@ func (b *layerBuilder) add(addr uint32, ttl, maxHops uint8, count uint64) {
 }
 
 func (b *layerBuilder) result(hops *uint8) Layer {
-	prefixLen := bits.LeadingZeros32(b.variance)
-	mask := net.CIDRMask(prefixLen, 32)
-	base := b.reference & binary.BigEndian.Uint32(mask)
+	prefix := subnets.FromVariance(b.reference, b.variance)
 	layer := Layer{
-		Hops: hops, Prefix: fmt.Sprintf("%s/%d", ipString(base), prefixLen),
+		Hops: hops, Prefix: prefix.String(),
 		Reference: ipString(b.reference), VarianceMask: ipString(b.variance),
 		Packets: b.packets, DistinctAddresses: len(b.addresses), Bits: make([]Bit, 32),
 	}
@@ -225,17 +223,16 @@ func (b *layerBuilder) result(hops *uint8) Layer {
 }
 
 func prefixTree(addresses []uint32, counts map[uint32]uint64) PrefixNode {
-	prefixLen := bits.LeadingZeros32(addresses[0] ^ addresses[len(addresses)-1])
-	mask := binary.BigEndian.Uint32(net.CIDRMask(prefixLen, 32))
+	prefix := subnets.FromVariance(addresses[0], addresses[0]^addresses[len(addresses)-1])
 	node := PrefixNode{
-		Prefix:            fmt.Sprintf("%s/%d", ipString(addresses[0]&mask), prefixLen),
+		Prefix:            prefix.String(),
 		DistinctAddresses: len(addresses),
 	}
 	for _, addr := range addresses {
 		node.Packets += counts[addr]
 	}
-	if prefixLen < 32 {
-		bit := uint32(1) << uint(31-prefixLen)
+	if prefix.Mask != ^uint32(0) {
+		bit := ^prefix.Mask - (^prefix.Mask >> 1)
 		split := sort.Search(len(addresses), func(i int) bool { return addresses[i]&bit != 0 })
 		node.Children = []PrefixNode{
 			prefixTree(addresses[:split], counts),

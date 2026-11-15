@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -50,6 +51,7 @@ func TestStandalonePCAPJSON(t *testing.T) {
 	command.Flags().String("interface", "eth0", "")
 	command.Flags().String("upstream-mac", "02:00:00:00:00:01", "")
 	command.Flags().Uint8("max-hops", 6, "")
+	command.Flags().String("format", "json", "")
 	if err := standaloneMode(command, nil); err != nil {
 		t.Fatal(err)
 	}
@@ -60,5 +62,36 @@ func TestStandalonePCAPJSON(t *testing.T) {
 	if report.Selection != "configured" || report.Overall.Prefix != "10.0.0.1/32" ||
 		len(report.Layers) != 1 || *report.Layers[0].Hops != 3 {
 		t.Fatalf("unexpected report: %+v", report)
+	}
+	output.Reset()
+	if err := command.Flags().Set("format", "text"); err != nil {
+		t.Fatal(err)
+	}
+	if err := standaloneMode(command, nil); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(output.String(), "Candidate: 10.0.0.1/32") ||
+		!strings.Contains(output.String(), "Estimated prior hops: 3") {
+		t.Fatalf("unexpected text report:\n%s", output.String())
+	}
+	output.Reset()
+	if err := command.Flags().Set("format", "jsonld"); err != nil {
+		t.Fatal(err)
+	}
+	if err := standaloneMode(command, nil); err != nil {
+		t.Fatal(err)
+	}
+	var document map[string]interface{}
+	if err := json.Unmarshal(output.Bytes(), &document); err != nil {
+		t.Fatal(err)
+	}
+	if document["@type"] != "schema:Dataset" || document["@context"] == nil {
+		t.Fatalf("unexpected JSON-LD report: %+v", document)
+	}
+	if err := command.Flags().Set("format", "invalid"); err != nil {
+		t.Fatal(err)
+	}
+	if err := standaloneMode(command, nil); err == nil || !strings.Contains(err.Error(), "unsupported report format") {
+		t.Fatalf("expected format error, got %v", err)
 	}
 }

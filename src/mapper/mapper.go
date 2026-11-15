@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"fmt"
+
 	"github.com/databeast/goatherd/internal/capture"
 	"github.com/databeast/goatherd/internal/comm"
 	"github.com/pkg/errors"
@@ -48,7 +49,7 @@ func (m *Mapper) Begin() (err error) {
 	return
 }
 
-//subscribe to event messages from the mapper
+// subscribe to event messages from the mapper
 func (m *Mapper) Events() (events <-chan MappingEvent) {
 	return m.events
 }
