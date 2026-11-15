@@ -1,103 +1,70 @@
 package cmd
 
 import (
-	"github.com/databeast/goatherd/collector"
-	"github.com/databeast/goatherd/internal/capture"
-	"github.com/databeast/goatherd/mapper"
-	"github.com/spf13/cobra"
+	"encoding/json"
+	"fmt"
 	"net"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/databeast/goatherd/collector"
+	"github.com/databeast/goatherd/internal/discovery"
+	"github.com/spf13/cobra"
 )
 
-// standaloneCmd represents the standalone command
 var standaloneCmd = &cobra.Command{
 	Use:   "standalone",
-	Short: "run goatherd in local capture standalone mode",
-	Long:  `goatherd will run the collector and mapper components simultaneously, from a local interface or .pcap file`,
-	Run:   standaloneMode,
+	Short: "infer downstream IPv4 prefixes from a local capture or pcap file",
+	RunE:  standaloneMode,
 }
 
-func standaloneMode(cmd *cobra.Command, args []string) {
-	var err error
-	logger.Printf("Goatherd Standalone Mode engaged")
-
-	collector := collector.NewPcapCollector()
-
-	if cmd.Flag("pcap").Value.String() != "" {
-		logger.Printf("Loading pcap file: %q\n", cmd.Flag("pcap").Value.String())
-		// file mode
-		err = collector.LoadFile(cmd.Flag("pcap").Value.String())
-		if err != nil {
-			println(err.Error())
-			return
+func standaloneMode(cmd *cobra.Command, args []string) error {
+	filename, err := cmd.Flags().GetString("pcap")
+	if err != nil {
+		return err
+	}
+	iface, err := cmd.Flags().GetString("interface")
+	if err != nil {
+		return err
+	}
+	macText, err := cmd.Flags().GetString("upstream-mac")
+	if err != nil {
+		return err
+	}
+	maxHops, err := cmd.Flags().GetUint8("max-hops")
+	if err != nil {
+		return err
+	}
+	var upstream net.HardwareAddr
+	if macText != "" {
+		upstream, err = net.ParseMAC(macText)
+		if err != nil || len(upstream) != 6 || upstream[0]&1 != 0 {
+			return fmt.Errorf("invalid unicast Ethernet upstream MAC %q", macText)
 		}
-	} else {
-		logger.Printf("Loading from Eth0\n")
-		err = collector.OpenNic("eth0")
-		if err != nil {
-			println(err.Error())
-			return
-		}
 	}
-
-	standaloneMapper, err := mapper.NewMapper(mapper.MapperSettings{})
+	ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	analyzer := discovery.New(maxHops)
+	if filename == "" {
+		fmt.Fprintf(cmd.ErrOrStderr(), "Capturing on %s; interrupt to produce a report.\n", iface)
+	}
+	if err := collector.Observe(ctx, filename, iface, analyzer); err != nil {
+		return err
+	}
+	report, err := analyzer.Report(upstream)
 	if err != nil {
-		logger.Printf(err.Error())
-		return
+		return err
 	}
-
-	println("Creating Default Capture Point")
-	cappoint, err := capture.NewCapturePoint()
-	if err != nil {
-		println(err.Error())
-		return
-	}
-	println("Setting Test Default Gateway")
-	mac, err := net.ParseMAC("00:15:5d:4c:07:d8")
-	if err != nil {
-		logger.Printf(err.Error())
-		return
-	}
-
-	err = cappoint.SetDefaultGateway(mac)
-	if err != nil {
-		logger.Printf(err.Error())
-		return
-	}
-
-	println("attaching Default Capture Point")
-	err = standaloneMapper.AttachCapturePoint(cappoint)
-	if err != nil {
-		println(err.Error())
-		return
-	}
-	println("Commencing Ingestion")
-	collector.Start(cappoint)
-
-	println("Commencing Mapping")
-	err = standaloneMapper.Begin()
-	if err != nil {
-		println(err.Error())
-		return
-	}
-	err = standaloneMapper.Ingest(collector.Packets())
-	if err != nil {
-		println(err.Error())
-		return
-	}
-
+	encoder := json.NewEncoder(cmd.OutOrStdout())
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(report)
 }
 
 func init() {
 	rootCmd.AddCommand(standaloneCmd)
-	standaloneCmd.PersistentFlags().String("pcap", "", "load from a .pcap file")
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// standaloneCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// standaloneCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	standaloneCmd.Flags().String("pcap", "", "read an Ethernet pcap file instead of live capture")
+	standaloneCmd.Flags().String("interface", "eth0", "live capture interface")
+	standaloneCmd.Flags().String("upstream-mac", "", "use this upstream MAC instead of detecting it from ARP")
+	standaloneCmd.Flags().Uint8("max-hops", 6, "maximum prior hops for a TTL estimate")
 }

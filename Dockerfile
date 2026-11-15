@@ -1,11 +1,13 @@
-FROM golang:alpine as builder
-COPY . /goatherd
+FROM golang:alpine AS builder
+RUN apk add --no-cache gcc musl-dev libpcap-dev
 
-WORKDIR /goatherd
+WORKDIR /src
+COPY src/ ./
 RUN go mod download
-RUN go test
-RUN go build
+RUN go test ./...
+RUN go build -o /goatherd .
 
 FROM alpine:latest
-COPY --from=builder /goatherd/goatherd /goatherd
-ENTRYPOINT /goatherd
+RUN apk add --no-cache libpcap
+COPY --from=builder /goatherd /goatherd
+ENTRYPOINT ["/goatherd"]
